@@ -13,8 +13,8 @@ public class Connect4 {
 	private static final int ARROW_START = 20;
 	private static final int BORDER = 20;
 	private static final int SAFETY_MARGIN = 50;
-	private static int BORDER_X = 0;
-	private static int BORDER_Y = 0;
+	private static int BORDER_X = 20;
+	private static int BORDER_Y = 20;
 	private static int DISTANCE_HOLES_X = 140;
 	private static int DISTANCE_HOLES_Y = 140;
 	private static final int BACKGROUND_START = 150;
@@ -29,7 +29,7 @@ public class Connect4 {
 	private int turnCount = 0;
 	private static final int TURN_COUNT_MAX = 42;
 	private static final int FPS = 60;
-	public int rowSelected = 4;
+	public int rowSelected = 3;
 	public boolean selectRow = false;
 	
 	public void init () {
@@ -43,7 +43,7 @@ public class Connect4 {
 	
 	public void keyboardInput () {
 		display.setKeyManager (new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
+			public void keyPressed (KeyEvent e) {
 			    if (e.getKeyCode () == KeyEvent.VK_RIGHT) {
 			    	++rowSelected;
 			    	if (rowSelected > COLUMNS - 1) {
@@ -78,17 +78,10 @@ public class Connect4 {
 		if (2 * RADIUS> DISTANCE_HOLES_Y) {
 			RADIUS = DISTANCE_HOLES_Y - 10;
 		}
-		/*System.out.println(DISTANCE_HOLES_X);
-		System.out.println(DISTANCE_HOLES_Y);
-		System.out.println(BORDER_X);
-		System.out.println(BORDER_Y);
-		
-		System.out.println(display.getFrameWidth());
-		System.out.println(display.getFrameHeight());*/
 	}
 	
 	public void drawBackground () {
-		this.calcGraphics();
+		//this.calcGraphics();
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
 		
@@ -234,7 +227,15 @@ public class Connect4 {
 	}
 	
 	public boolean checkFull () {
-		return (turnCount == TURN_COUNT_MAX);
+		int k = 0;
+		for (int i = 0; i < COLUMNS; i++) {
+			for (int j = 0; j < ROWS; j++) {
+				if (isOccupied(i, j)) {
+					k++;
+				}
+			}
+		}
+		return (turnCount == TURN_COUNT_MAX) || (k == TURN_COUNT_MAX);
 	}
 	
 	public boolean checkFour () {		
@@ -249,13 +250,13 @@ public class Connect4 {
 					return true;
 				} else if (j > 2 && contents[i][j] == player && contents[i][j-1] == player && contents[i][j-2] == player && contents[i][j-3] == player) {
 					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i+1][j-1] == player && contents[i+2][j-2] == player && contents[i+3][j-3] == player) {
+				} else if (i < COLUMNS - 3 && j > 2 && contents[i][j] == player && contents[i+1][j-1] == player && contents[i+2][j-2] == player && contents[i+3][j-3] == player) {
 					return true;
 				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i+1][j+1] == player && contents[i+2][j+2] == player && contents[i+3][j+3] == player) {
 					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j+1] == player && contents[i-2][j+2] == player && contents[i-3][j+3] == player) {
+				} else if (i > 2 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j+1] == player && contents[i-2][j+2] == player && contents[i-3][j+3] == player) {
 					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j-1] == player && contents[i-2][j-2] == player && contents[i-3][j-3] == player) {
+				} else if (i > 2 && j > 2 && contents[i][j] == player && contents[i-1][j-1] == player && contents[i-2][j-2] == player && contents[i-3][j-3] == player) {
 					return true;
 				}
 			}
