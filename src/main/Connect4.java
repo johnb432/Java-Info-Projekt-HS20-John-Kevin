@@ -7,22 +7,28 @@ import java.awt.event.KeyEvent;
 public class Connect4 {
 	private static final int WIDTH = 1000;
 	private static final int HEIGHT = 1000;
-	private static final int RADIUS = 70;
+	private static int RADIUS = 100;
 	private static final int ARROW_WIDTH = RADIUS / 2;
 	private static final int ARROW_HEIGHT = RADIUS / 4 * 3;
-	private static final int ARROW_START = 100;
+	private static final int ARROW_START = 20;
 	private static final int BORDER = 20;
-	private static final int DISTANCE_HOLES = 110;
-	private static final int BACKGROUND_START = 200;
-	private static final int ROWS = 7;
-	private static final int COLUMNS = 9;
+	private static final int SAFETY_MARGIN = 50;
+	private static int BORDER_X = 0;
+	private static int BORDER_Y = 0;
+	private static int DISTANCE_HOLES_X = 140;
+	private static int DISTANCE_HOLES_Y = 140;
+	private static final int BACKGROUND_START = 150;
+	private static final int COLUMNS = 7;
+	private static final int ROWS = 6;
 	private static final int OFFSET_X = 200;
 	private static final int OFFSET_Y = 200;
 	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
+	
 	private int[][] contents = new int[COLUMNS][ROWS];
 	private int turn = 1;
 	private int turnCount = 0;
-	private static final int TURN_COUNT_MAX = 35;
+	private static final int TURN_COUNT_MAX = 42;
+	private static final int FPS = 60;
 	public int rowSelected = 4;
 	public boolean selectRow = false;
 	
@@ -32,7 +38,7 @@ public class Connect4 {
 	}
 	
 	public void refreshRate () {
-		display.syncGameLogic(144);
+		display.syncGameLogic(FPS);
 	}
 	
 	public void keyboardInput () {
@@ -40,7 +46,7 @@ public class Connect4 {
 			public void keyPressed(KeyEvent e) {
 			    if (e.getKeyCode () == KeyEvent.VK_RIGHT) {
 			    	++rowSelected;
-			    	if (rowSelected >= COLUMNS - 1) {
+			    	if (rowSelected > COLUMNS - 1) {
 			    		rowSelected = COLUMNS - 1;
 			    	}
 			    }
@@ -59,45 +65,68 @@ public class Connect4 {
 	    });
 	}
 	
+	private void calcGraphics () {
+		DISTANCE_HOLES_X = (WIDTH) / (COLUMNS + 1);
+		DISTANCE_HOLES_Y = (HEIGHT) / (ROWS + 1);
+		BORDER_X = (WIDTH - ((COLUMNS - 1) * DISTANCE_HOLES_X)) / 2 - SAFETY_MARGIN;
+		BORDER_Y = (HEIGHT - BACKGROUND_START - ((ROWS - 1) * DISTANCE_HOLES_Y)) / 2 - SAFETY_MARGIN;
+		RADIUS = (WIDTH + HEIGHT) / 20;
+		
+		if (2 * RADIUS> DISTANCE_HOLES_X) {
+			RADIUS = DISTANCE_HOLES_X - 10;
+		}
+		if (2 * RADIUS> DISTANCE_HOLES_Y) {
+			RADIUS = DISTANCE_HOLES_Y - 10;
+		}
+		/*System.out.println(DISTANCE_HOLES_X);
+		System.out.println(DISTANCE_HOLES_Y);
+		System.out.println(BORDER_X);
+		System.out.println(BORDER_Y);
+		
+		System.out.println(display.getFrameWidth());
+		System.out.println(display.getFrameHeight());*/
+	}
+	
 	public void drawBackground () {
+		this.calcGraphics();
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
 		
-		for (int i = BORDER; i < HEIGHT - BORDER; i += DISTANCE_HOLES) {
-			for (int j = BACKGROUND_START + BORDER; j < WIDTH - BORDER; j += DISTANCE_HOLES) {
-				display.setColor(Color.white);
-				display.drawFilledOval(i, j, RADIUS, RADIUS);
-				
-				display.setColor(Color.black);
-				for (int k = 1; k < 4; k++) {
-					display.drawCircle(i, j, RADIUS + k);
+		for (int i = 0; i < COLUMNS; i++) {
+			for (int j = 0; j < ROWS; j++) {
+				if (contents[i][j] == 0) {
+					display.setColor(Color.white);
+					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
+					
+					display.setColor(Color.black);
+					for (int k = 1; k < 4; k++) {
+						display.drawCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS + k);
+					}
 				}
 			}
 		}
-		
-		this.drawBlankSpaces();
 	}
 	
-	public void drawBlankSpaces () {
+	/*public void drawBlankSpaces () { // could be used for animations
 		display.setColor(Color.white);
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
 				if (contents[i][j] == 0) {
-					display.drawFilledOval(i * DISTANCE_HOLES + BORDER, j * DISTANCE_HOLES + BACKGROUND_START + BORDER, RADIUS, RADIUS);
+					//display.drawFilledOval(i * DISTANCE_HOLES + BORDER_X, j * DISTANCE_HOLES + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
 				}
 			}
 		}
-	}
+	}*/
 	
 	public void drawTakenSpaces () {
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
 				if (contents[i][j] == 1) {
 					display.setColor(Color.red);
-					display.drawFilledOval(i * DISTANCE_HOLES + BORDER, j * DISTANCE_HOLES + BACKGROUND_START + BORDER, RADIUS, RADIUS);
+					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
 				} else if (contents[i][j] == 2) {
 					display.setColor(Color.yellow);
-					display.drawFilledOval(i * DISTANCE_HOLES + BORDER, j * DISTANCE_HOLES + BACKGROUND_START + BORDER, RADIUS, RADIUS);
+					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
 				}
 			}
 		}
@@ -107,7 +136,7 @@ public class Connect4 {
 		display.setColor(Color.white);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
 		int y = ARROW_START;
-		int x = rowSelected * DISTANCE_HOLES + BORDER;
+		int x = rowSelected * DISTANCE_HOLES_X + BORDER_X;
 		this.drawArrow(x, y);
 	}
 	
@@ -209,26 +238,25 @@ public class Connect4 {
 	}
 	
 	public boolean checkFour () {		
-		for (int player = 1; player < 3; player++) {
-			for (int i = 0; i < COLUMNS; i++) {
-				for (int j = 0; j < ROWS; j++) {
-					if (i < COLUMNS - 3 && contents[i][j] == player && contents[i+1][j] == player && contents[i+2][j] == player && contents[i+3][j] == player) {
-						return true;
-					} else if (i > 2 && contents[i][j] == player && contents[i-1][j] == player && contents[i-2][j] == player && contents[i-3][j] == player) {
-						return true;
-					} else if (j < ROWS - 3 && contents[i][j] == player && contents[i][j+1] == player && contents[i][j+2] == player && contents[i][j+3] == player) {
-						return true;
-					} else if (j > 2 && contents[i][j] == player && contents[i][j-1] == player && contents[i][j-2] == player && contents[i][j-3] == player) {
-						return true;
-					} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i+1][j-1] == player && contents[i+2][j-2] == player && contents[i+3][j-3] == player) {
-						return true;
-					} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i+1][j+1] == player && contents[i+2][j+2] == player && contents[i+3][j+3] == player) {
-						return true;
-					} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j+1] == player && contents[i-2][j+2] == player && contents[i-3][j+3] == player) {
-						return true;
-					} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j-1] == player && contents[i-2][j-2] == player && contents[i-3][j-3] == player) {
-						return true;
-					}
+		int player = this.getNextPlayer();
+		for (int i = 0; i < COLUMNS; i++) {
+			for (int j = 0; j < ROWS; j++) {
+				if (i < COLUMNS - 3 && contents[i][j] == player && contents[i+1][j] == player && contents[i+2][j] == player && contents[i+3][j] == player) {
+					return true;
+				} else if (i > 2 && contents[i][j] == player && contents[i-1][j] == player && contents[i-2][j] == player && contents[i-3][j] == player) {
+					return true;
+				} else if (j < ROWS - 3 && contents[i][j] == player && contents[i][j+1] == player && contents[i][j+2] == player && contents[i][j+3] == player) {
+					return true;
+				} else if (j > 2 && contents[i][j] == player && contents[i][j-1] == player && contents[i][j-2] == player && contents[i][j-3] == player) {
+					return true;
+				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i+1][j-1] == player && contents[i+2][j-2] == player && contents[i+3][j-3] == player) {
+					return true;
+				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i+1][j+1] == player && contents[i+2][j+2] == player && contents[i+3][j+3] == player) {
+					return true;
+				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j+1] == player && contents[i-2][j+2] == player && contents[i-3][j+3] == player) {
+					return true;
+				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i-1][j-1] == player && contents[i-2][j-2] == player && contents[i-3][j-3] == player) {
+					return true;
 				}
 			}
 		}
