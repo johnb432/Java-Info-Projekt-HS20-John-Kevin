@@ -12,7 +12,7 @@ public class Connect4 {
 	private static final int ARROW_HEIGHT = RADIUS / 4 * 3;
 	private static final int ARROW_START = 20;
 	private static final int BORDER = 20;
-	private static final int SAFETY_MARGIN = 50;
+	//private static final int SAFETY_MARGIN = 50;
 	private static int BORDER_X = 20;
 	private static int BORDER_Y = 20;
 	private static int DISTANCE_HOLES_X = 140;
@@ -25,12 +25,12 @@ public class Connect4 {
 	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
 	
 	private int[][] contents = new int[COLUMNS][ROWS];
-	private int turn = 1;
+	private int turnPlayer = 1;
 	private int turnCount = 0;
 	private static final int TURN_COUNT_MAX = 42;
 	private static final int FPS = 60;
-	public int rowSelected = 3;
-	public boolean selectRow = false;
+	private int rowCurrentlySelected = 3;
+	private boolean rowSelected = false;
 	
 	public void init () {
 		this.drawBackground();
@@ -45,27 +45,27 @@ public class Connect4 {
 		display.setKeyManager (new KeyAdapter() {
 			public void keyPressed (KeyEvent e) {
 			    if (e.getKeyCode () == KeyEvent.VK_RIGHT) {
-			    	++rowSelected;
-			    	if (rowSelected > COLUMNS - 1) {
-			    		rowSelected = COLUMNS - 1;
+			    	++rowCurrentlySelected;
+			    	if (rowCurrentlySelected > COLUMNS - 1) {
+			    		rowCurrentlySelected = COLUMNS - 1;
 			    	}
 			    }
 			    
 			    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-			    	--rowSelected;
-			    	if (rowSelected < 0) {
-			    		rowSelected = 0;
+			    	--rowCurrentlySelected;
+			    	if (rowCurrentlySelected < 0) {
+			    		rowCurrentlySelected = 0;
 			    	}
 			    }
 			    
 			    if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-			    	selectRow = true;
+			    	rowSelected = true;
 			    }
 		  	}
 	    });
 	}
 	
-	private void calcGraphics () {
+	/*private void calcGraphics () {
 		DISTANCE_HOLES_X = (WIDTH) / (COLUMNS + 1);
 		DISTANCE_HOLES_Y = (HEIGHT) / (ROWS + 1);
 		BORDER_X = (WIDTH - ((COLUMNS - 1) * DISTANCE_HOLES_X)) / 2 - SAFETY_MARGIN;
@@ -78,48 +78,44 @@ public class Connect4 {
 		if (2 * RADIUS> DISTANCE_HOLES_Y) {
 			RADIUS = DISTANCE_HOLES_Y - 10;
 		}
-	}
+	}*/
 	
 	public void drawBackground () {
 		//this.calcGraphics();
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
-		
+		this.drawBlankSpaces(true, true);
+	}
+	
+	public void drawBlankSpaces (boolean overwrite, boolean shadow) { // could be used for animations
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				if (contents[i][j] == 0) {
+				if (overwrite || contents[i][j] == 0) {
 					display.setColor(Color.white);
 					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
 					
-					display.setColor(Color.black);
-					for (int k = 1; k < 4; k++) {
-						display.drawCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS + k);
+					if (shadow) {
+						display.setColor(Color.black);
+						for (int k = 1; k < 4; k++) {
+							display.drawCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS + k);
+						}
 					}
 				}
 			}
 		}
 	}
 	
-	/*public void drawBlankSpaces () { // could be used for animations
-		display.setColor(Color.white);
-		for (int i = 0; i < COLUMNS; i++) {
-			for (int j = 0; j < ROWS; j++) {
-				if (contents[i][j] == 0) {
-					//display.drawFilledOval(i * DISTANCE_HOLES + BORDER_X, j * DISTANCE_HOLES + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
-				}
-			}
-		}
-	}*/
-	
 	public void drawTakenSpaces () {
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				if (contents[i][j] == 1) {
-					display.setColor(Color.red);
-					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
-				} else if (contents[i][j] == 2) {
-					display.setColor(Color.yellow);
-					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
+				if (this.isOccupied(i, j)) {
+					if (contents[i][j] == 1) {
+						display.setColor(Color.red);
+					} else if (contents[i][j] == 2) {
+						display.setColor(Color.yellow);
+					}
+					
+					display.drawFilledCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 				}
 			}
 		}
@@ -129,7 +125,7 @@ public class Connect4 {
 		display.setColor(Color.white);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
 		int y = ARROW_START;
-		int x = rowSelected * DISTANCE_HOLES_X + BORDER_X;
+		int x = rowCurrentlySelected * DISTANCE_HOLES_X + BORDER_X;
 		this.drawArrow(x, y);
 	}
 	
@@ -142,6 +138,7 @@ public class Connect4 {
 				display.setPixel(px + x, py + ARROW_HEIGHT + y);
 			}
 		}
+		
 		for (int x = ARROW_WIDTH; x <= 2 * ARROW_WIDTH; x++) {
 			for (int y = 0; y < 2 * ARROW_WIDTH - x ; y++) {
 				display.setPixel(px + x, py + ARROW_HEIGHT + y);
@@ -150,18 +147,22 @@ public class Connect4 {
 	}
 	
 	public void displayWinner () {
-		FunGraphics displayWinner = new FunGraphics(WIDTH, HEIGHT / 4, OFFSET_X, OFFSET_Y, "Winner!", true);
+		//FunGraphics displayWinner = new FunGraphics(WIDTH, HEIGHT / 4, OFFSET_X, OFFSET_Y, "Winner!", true);
 		String s = "Player " + this.getNextPlayer() + " wins!";
-		displayWinner.setColor(Color.black);
-		displayWinner.drawFillRect(0, 0, WIDTH, HEIGHT / 4);
-		displayWinner.drawFancyString(BORDER, 100, s, this.getNextPlayerColor(), 100);
+		display.setColor(Color.black);
+		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
+		display.drawFancyString(BORDER, 100, s, this.getNextPlayerColor(), 100);
+	}
+	
+	public boolean rowIsSelected () {
+		return this.rowSelected;
+	}
+	
+	public int rowSelected () {
+		return this.rowCurrentlySelected;
 	}
 	
 	private boolean isOccupied (int column, int row) {
-		if (column < 0) {
-			return true;
-		}
-		
 		int content = contents[column][row];
 		
 		if (content == 1 || content == 2) {
@@ -178,7 +179,7 @@ public class Connect4 {
 	}
 	
 	public int getCurrentPlayer () {
-		return turn;
+		return turnPlayer;
 	}
 	
 	public int getNextPlayer() {
@@ -196,19 +197,20 @@ public class Connect4 {
 	public int switchPlayer () {
 		int player = this.getCurrentPlayer();
 		if (player == 1) {
-			turn = 2;
+			turnPlayer = 2;
 		}
 		
 		if (player == 2) {
-			turn = 1;
+			turnPlayer = 1;
 		}
 		
 		this.drawArrowSelected();
 		
-		return turn;
+		return turnPlayer;
 	}
 	
 	public boolean dropPiece (int column) {
+		this.rowSelected = false;
 		if (column >= COLUMNS) {
 			return false;
 		}
@@ -262,6 +264,30 @@ public class Connect4 {
 			}
 		}
 		
+		return false;
+	}
+	
+	public boolean playAgain () {
+		System.out.println("Do you want to play again?");
+		System.out.println("To replay, type 'y' or 'Y'");
+		
+		char in = Input.readChar();
+		
+		if (in == 'y' || in == 'Y') {
+			display.clear();
+			
+			for (int i = 0; i < COLUMNS; i++) {
+				for (int j = 0; j < ROWS; j++) {
+					contents[i][j] = 0;
+				}
+			}
+			
+			turnPlayer = 1;
+			turnCount = 0;
+			rowCurrentlySelected = 3;
+			this.drawBackground();
+			return true;
+		}
 		return false;
 	}
 }
