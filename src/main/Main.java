@@ -3,25 +3,38 @@ package main;
 public class Main {
 	public static void main(String[] args) {
 		Connect4 game1 = new Connect4();
-		game1.drawBackground();
-		/*System.out.println(game1.isOccupied(3, 4));
+		game1.init();
+
+		int oldSelected = -1;
 		
-		game1.setOccupied(3, 4);
+		while (true)  {
+			game1.refreshRate();
+			
+			while (!game1.selectRow) {
+				if (game1.rowSelected != oldSelected) {
+					game1.drawArrowSelected();
+					oldSelected = game1.rowSelected;
+				}
+				System.out.print("");
+			}
+			game1.selectRow = false;
+			game1.dropPiece(game1.rowSelected);
+			game1.drawTakenSpaces();
+			
+			if (game1.checkFour()) {
+				game1.displayWinner();
+				break;
+			}
+			
+			if (game1.checkFull()) {
+				System.out.println("Nobody wins.");
+				break;
+			}
+		}
 		
-		System.out.println(game1.isOccupied(3, 4));
-		
-		game1.drawTakenSpaces();
-		
-		game1.drawBlankSpaces();
-		
-		game1.setOccupied(4, 4);*/
-		
-		game1.dropPiece(3);
-		game1.drawTakenSpaces();
-		game1.dropPiece(3);
-		game1.drawTakenSpaces();
-		game1.dropPiece(3);
-		game1.drawTakenSpaces();
+		/*Connect4 game2 = new Connect4();
+		game2.drawBackground();
+		game2.drawTakenSpaces();*/
 	}
 
 }
