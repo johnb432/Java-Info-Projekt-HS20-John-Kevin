@@ -1,11 +1,20 @@
 package main;
 
-import hevs.graphics.FunGraphics;
 import java.awt.Color;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import javax.swing.*;
 
-public class Connect4 {
+import hevs.graphics.FunGraphics;
+
+public class Connect4 extends JPanel implements MouseMotionListener, MouseListener {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private static final int WIDTH = 1000;
 	private static final int HEIGHT = 1000;
 	private static int RADIUS = 100;
@@ -13,7 +22,7 @@ public class Connect4 {
 	private static final int ARROW_HEIGHT = RADIUS / 4 * 3;
 	private static final int ARROW_START = 20;
 	private static final int BORDER = 20;
-	// private static final int SAFETY_MARGIN = 50;
+	private static final int SAFETY_MARGIN = 20;
 	private static int BORDER_X = 20;
 	private static int BORDER_Y = 20;
 	private static int DISTANCE_HOLES_X = 140;
@@ -29,7 +38,7 @@ public class Connect4 {
 	private int turnPlayer = 1;
 	private int turnCount = 0;
 	private static final int TURN_COUNT_MAX = 42;
-	private static final int FPS = 60;
+	private static final int FPS = 144;
 	private int rowCurrentlySelected = 3;
 	private boolean rowSelected = false;
 	private int connectFourColumn1 = 0;
@@ -39,14 +48,45 @@ public class Connect4 {
 
 	public void init() {
 		this.drawBackground();
-		this.keyboardInput();
+		//this.keyboardInput();
 	}
 
 	public void refreshRate() {
 		display.syncGameLogic(FPS);
 	}
+	
+	public Connect4() {
+		display.addMouseListener(this);
+		addMouseListener(this);
+		
+		display.addMouseMotionListener(this);
+		addMouseMotionListener(this);
+	}
 
-	public void keyboardInput() {
+	public void mouseDragged(MouseEvent e) {}
+
+	public void mouseMoved(MouseEvent e) {
+		for (int i = 0; i < COLUMNS; i++) {
+			if (e.getX() <= i * DISTANCE_HOLES_X + BORDER_X + RADIUS + ARROW_WIDTH - SAFETY_MARGIN && e.getX() >= i * DISTANCE_HOLES_X + BORDER_X + ARROW_WIDTH - RADIUS + SAFETY_MARGIN) {
+				rowCurrentlySelected = i;
+				this.drawArrowSelected();
+			}
+		}
+	}
+	
+	public void mousePressed(MouseEvent e) {}
+     
+    public void mouseReleased(MouseEvent e) {
+    	rowSelected = true;
+    }
+     
+    public void mouseEntered(MouseEvent e) {}
+     
+    public void mouseExited(MouseEvent e) {}
+     
+    public void mouseClicked(MouseEvent e) {}
+
+	public void keyboardInput() { // currently not in use
 		display.setKeyManager(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
@@ -100,8 +140,7 @@ public class Connect4 {
 			for (int j = 0; j < ROWS; j++) {
 				if (overwrite || contents[i][j] == 0) {
 					display.setColor(Color.white);
-					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X,
-							j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
+					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
 
 					if (shadow) {
 						display.setColor(Color.black);
