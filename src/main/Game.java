@@ -15,8 +15,9 @@ public class Game {
 					game.drawArrowSelected();
 					oldSelected = game.rowSelected();
 				}
-				System.out.print("");
+				System.out.print(""); // should be corrected
 			}
+			
 			game.dropPiece(game.rowSelected());
 			game.drawTakenSpaces();
 

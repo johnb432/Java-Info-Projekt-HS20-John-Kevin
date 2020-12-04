@@ -11,9 +11,6 @@ import javax.swing.*;
 import hevs.graphics.FunGraphics;
 
 public class Connect4 extends JPanel implements MouseMotionListener, MouseListener {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private static final int WIDTH = 1000;
 	private static final int HEIGHT = 1000;
@@ -48,20 +45,20 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 
 	public void init() {
 		this.drawBackground();
-		//this.keyboardInput();
+		this.keyboardInput();
 	}
 
 	public void refreshRate() {
 		display.syncGameLogic(FPS);
 	}
 	
-	public Connect4() {
+	/*public Connect4() {
 		display.addMouseListener(this);
 		addMouseListener(this);
 		
 		display.addMouseMotionListener(this);
 		addMouseMotionListener(this);
-	}
+	}*/
 
 	public void mouseDragged(MouseEvent e) {}
 
