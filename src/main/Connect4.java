@@ -108,7 +108,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	/*
- 	private void calcGraphics () {
+ 	private void calcGraphics () { // remember that circles don't start at circle centers!!!!!!!!
 		DISTANCE_HOLES_X = (WIDTH) / (COLUMNS + 1);
 		DISTANCE_HOLES_Y = (HEIGHT) / (ROWS + 1); BORDER_X = (WIDTH - ((COLUMNS - 1) * DISTANCE_HOLES_X)) / 2 - SAFETY_MARGIN;
 		BORDER_Y = (HEIGHT -
@@ -126,7 +126,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	*/
 
 	public void drawBackground() {
-		// this.calcGraphics();
+		//this.calcGraphics();
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
 		this.drawBlankSpaces(true, true);
@@ -137,7 +137,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 			for (int j = 0; j < ROWS; j++) {
 				if (overwrite || contents[i][j] == 0) {
 					display.setColor(Color.white);
-					display.drawFilledOval(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS, RADIUS);
+					display.drawFilledCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 
 					if (shadow) {
 						display.setColor(Color.black);
@@ -151,7 +151,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	public void drawTakenSpaces() {
-		for (int i = 0; i < COLUMNS; i++) {
+		for (int i = 0; i < COLUMNS; i++) { // optimize?
 			for (int j = 0; j < ROWS; j++) {
 				if (this.isOccupied(i, j)) {
 					if (contents[i][j] == 1) {
@@ -174,34 +174,29 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		this.drawArrow(x, y);
 	}
 
-	public void drawArrow(int px, int py) {
+	public void drawArrow(int px, int py) { // optimize?
 		display.setColor(this.getCurrentPlayerColor());
 		display.drawFillRect(px + RADIUS / 4, py, ARROW_WIDTH, ARROW_HEIGHT);
 
-		for (int x = 0; x < ARROW_WIDTH; x++) {
+		for (int x = 0; x <= ARROW_WIDTH; x++) {
 			for (int y = 0; y < x; y++) {
 				display.setPixel(px + x, py + ARROW_HEIGHT + y);
-			}
-		}
-
-		for (int x = ARROW_WIDTH; x <= 2 * ARROW_WIDTH; x++) {
-			for (int y = 0; y < 2 * ARROW_WIDTH - x; y++) {
-				display.setPixel(px + x, py + ARROW_HEIGHT + y);
+				display.setPixel(px + 2 * ARROW_WIDTH - x, py + ARROW_HEIGHT + y);
 			}
 		}
 	}
 
 	public void displayWinner() {
-		// FunGraphics displayWinner = new FunGraphics(WIDTH, HEIGHT / 4, OFFSET_X, OFFSET_Y, "Winner!", true);
-		String s = "Player " + this.getNextPlayer() + " wins!";
 		display.setColor(Color.black);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
-		display.drawFancyString(BORDER, 100, s, this.getNextPlayerColor(), 100);
+		display.drawFancyString(BORDER, 100, "Player " + this.getNextPlayer() + " wins!", this.getNextPlayerColor(), 100);
 		
 		int calcX = BORDER_X + RADIUS / 2;
 		int calcY = BORDER_Y + BACKGROUND_START + RADIUS / 2;
 		
+		display.setPenWidth(4.0f);
 		display.drawLine(connectFourColumn1 * DISTANCE_HOLES_X + calcX, connectFourRow1 * DISTANCE_HOLES_Y + calcY, connectFourColumn2 * DISTANCE_HOLES_X + calcX, connectFourRow2 * DISTANCE_HOLES_Y + calcY);
+		display.setPenWidth(1.0f);
 	}
 
 	public boolean rowIsSelected() {
@@ -228,7 +223,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
-	public int getCurrentPlayer() {
+	private int getCurrentPlayer() {
 		return turnPlayer;
 	}
 
@@ -269,28 +264,19 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 			if (!isOccupied(column, i)) {
 				this.setOccupied(column, i);
 				this.switchPlayer();
+				this.turnCount++;
 				return true;
 			}
 		}
-
-		this.turnCount++;
 
 		return false;
 	}
 
 	public boolean checkFull() {
-		int k = 0;
-		for (int i = 0; i < COLUMNS; i++) {
-			for (int j = 0; j < ROWS; j++) {
-				if (isOccupied(i, j)) {
-					k++;
-				}
-			}
-		}
-		return (turnCount == TURN_COUNT_MAX) || (k == TURN_COUNT_MAX);
+		return (turnCount == TURN_COUNT_MAX);
 	}
 
-	public boolean checkFour() {
+	public boolean checkFour() { // OPTIMIZE
 		int player = this.getNextPlayer();
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
@@ -350,8 +336,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	public boolean playAgain() {
-		System.out.println("Do you want to play again?");
-		System.out.println("To replay, type 'y' or 'Y'");
+		System.out.println("Do you want to play again?\nTo replay, type 'y' or 'Y'");
 
 		char in = Input.readChar();
 
