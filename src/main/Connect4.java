@@ -18,16 +18,17 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	private static final int WIDTH = (int) (0.5 * gd.getDisplayMode().getWidth());
 	private static final int HEIGHT = (int) (0.75 * gd.getDisplayMode().getHeight());
 	private static int RADIUS = 100;
-	private static final int ARROW_WIDTH = RADIUS / 2;
-	private static final int ARROW_HEIGHT = RADIUS / 4 * 3;
-	private static final int ARROW_START = 20;
+	private static int ARROW_WIDTH = RADIUS / 2;
+	private static int ARROW_HEIGHT = RADIUS / 4 * 3;
+	private static int ARROW_START = 20;
 	private static final int BORDER = 20;
 	private static final int SAFETY_MARGIN = 20;
 	private static int BORDER_X = 20;
 	private static int BORDER_Y = 20;
 	private static int DISTANCE_HOLES_X = 140;
 	private static int DISTANCE_HOLES_Y = 140;
-	private static final int BACKGROUND_START = 150;
+	private static int BACKGROUND_START = 150;
+	
 	private static final int COLUMNS = 7;
 	private static final int ROWS = 6;
 	private static final int OFFSET_X = 0;
@@ -124,23 +125,25 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
 		DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
 		
-		RADIUS = (WIDTH + HEIGHT) / 20;
+		RADIUS = (WIDTH + HEIGHT) / 20; // TODO
 		
 		if (2 * RADIUS > DISTANCE_HOLES_X) {
 			RADIUS = DISTANCE_HOLES_X / 6 * 5;
 		}
-		
-		System.out.println(RADIUS);
-		System.out.println(DISTANCE_HOLES_Y);
 		 
 		if (2 * RADIUS > DISTANCE_HOLES_Y) {
 			RADIUS = DISTANCE_HOLES_Y / 6 * 5;
 		}
 		
-		System.out.println(RADIUS);
-		
 		BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
 		BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
+		
+		ARROW_WIDTH = RADIUS / 2;
+		ARROW_HEIGHT = RADIUS / 4 * 3;
+		
+		BACKGROUND_START = HEIGHT / 6;
+		
+		ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
 	}
 
 	public void drawBackground() {
