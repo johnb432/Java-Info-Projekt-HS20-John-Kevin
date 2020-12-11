@@ -1,19 +1,13 @@
 package main;
 
+import hevs.graphics.FunGraphics;
 import java.awt.Color;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import javax.swing.*;
 
-import hevs.graphics.FunGraphics;
-
-public class Connect4 extends JPanel implements MouseMotionListener, MouseListener {
-	private static final long serialVersionUID = 1L;
+public class Connect4 {
 	private static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 	private static final int WIDTH = (int) (0.5 * gd.getDisplayMode().getWidth());
 	private static final int HEIGHT = (int) (0.75 * gd.getDisplayMode().getHeight());
@@ -21,8 +15,6 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	private static int ARROW_WIDTH = RADIUS / 2;
 	private static int ARROW_HEIGHT = RADIUS / 4 * 3;
 	private static int ARROW_START = 20;
-	private static final int BORDER = 20;
-	private static final int SAFETY_MARGIN = 20;
 	private static int BORDER_X = 20;
 	private static int BORDER_Y = 20;
 	private static int DISTANCE_HOLES_X = 140;
@@ -41,91 +33,49 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	
 	private int turnPlayer = 1;
 	private int turnCount = 0;
-	private int rowCurrentlySelected = 3;
-	private boolean rowSelected = false;
-	private int connectFourColumn1 = 0;
-	private int connectFourColumn2 = 0;
-	private int connectFourRow1 = 0;
-	private int connectFourRow2 = 0;
-
+	private boolean playAgain = false;
+	private boolean waitingForInput = true;
+	private boolean allowInputRestart = false;
+	public boolean allowInput = false;
+	
+	private int columnCurrentlySelected = 3;
+	private int rowCurrentlyPlaced = 0;
+	private boolean columnSelected = false;
+	
+	private int connectFourColumn1 = -1;
+	private int connectFourColumn2 = -1;
+	private int connectFourRow1 = -1;
+	private int connectFourRow2 = -1;
+	
+	/**
+	 * Sets up content of arrays, window background and keyboard input
+	 */
 	public void init() {
 		this.setContents();
-		this.drawBackground();
+		this.calcGraphics();
 		this.keyboardInput();
+		this.drawBackground();
 	}
 	
+	/**
+	 * Makes a new basic Piece in every spot
+	 */
 	private void setContents() {		
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				this.contents[i][j] = new Piece (i, j);
+				contents[i][j] = new Piece (i, j);
 			}
 		}
 	}
 
-	public void refreshRate() {
-		display.syncGameLogic(FPS);
-	}
-	
-	/*public Connect4() {
-		display.addMouseListener(this);
-		addMouseListener(this);
-		
-		display.addMouseMotionListener(this);
-		addMouseMotionListener(this);
-	}*/
-
-	public void mouseDragged(MouseEvent e) {}
-
-	public void mouseMoved(MouseEvent e) {
-		for (int i = 0; i < COLUMNS; i++) {
-			if (e.getX() <= i * DISTANCE_HOLES_X + BORDER_X + RADIUS + ARROW_WIDTH - SAFETY_MARGIN && e.getX() >= i * DISTANCE_HOLES_X + BORDER_X + ARROW_WIDTH - RADIUS + SAFETY_MARGIN) {
-				rowCurrentlySelected = i;
-				this.drawArrowSelected();
-			}
-		}
-	}
-	
-	public void mousePressed(MouseEvent e) {}
-     
-    public void mouseReleased(MouseEvent e) {
-    	rowSelected = true;
-    }
-     
-    public void mouseEntered(MouseEvent e) {}
-     
-    public void mouseExited(MouseEvent e) {}
-     
-    public void mouseClicked(MouseEvent e) {}
-
-	public void keyboardInput() {
-		display.setKeyManager(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-					++rowCurrentlySelected;
-					if (rowCurrentlySelected > COLUMNS - 1) {
-						rowCurrentlySelected = COLUMNS - 1;
-					}
-				}
-
-				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-					--rowCurrentlySelected;
-					if (rowCurrentlySelected < 0) {
-						rowCurrentlySelected = 0;
-					}
-				}
-
-				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					rowSelected = true;
-				}
-			}
-		});
-	}
-
- 	private void calcGraphics () { // remember that circles don't start at circle centers!!!!!!!!
+	/**
+	 * Calculates various variables for drawing the game.
+	 */
+ 	private void calcGraphics () {
 		DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
 		DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
 		
-		RADIUS = (WIDTH + HEIGHT) / 20; // TODO
+		RADIUS = (WIDTH + HEIGHT) / 20;
 		
 		if (2 * RADIUS > DISTANCE_HOLES_X) {
 			RADIUS = DISTANCE_HOLES_X / 6 * 5;
@@ -146,14 +96,68 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
 	}
 
-	public void drawBackground() {
-		this.calcGraphics();
+    /**
+     * Handles keyboard input
+     */
+	private void keyboardInput() {
+		display.setKeyManager(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT && allowInput) {
+					++columnCurrentlySelected;
+					if (columnCurrentlySelected > COLUMNS - 1) {
+						columnCurrentlySelected = COLUMNS - 1;
+					}
+				}
+
+				if (e.getKeyCode() == KeyEvent.VK_LEFT && allowInput) {
+					--columnCurrentlySelected;
+					if (columnCurrentlySelected < 0) {
+						columnCurrentlySelected = 0;
+					}
+				}
+
+				if (e.getKeyCode() == KeyEvent.VK_DOWN && allowInput) {
+					columnSelected = true;
+					allowInput = false;
+				}
+				
+				if (e.getKeyCode() == KeyEvent.VK_ENTER && allowInputRestart) {
+					playAgain = true;
+					waitingForInput = false;
+				}
+				
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE && allowInputRestart) {
+					playAgain = false;
+					waitingForInput = false;
+				} 
+			}
+		});
+	}
+ 	
+ 	/**
+ 	 * Draws the background of the game
+ 	 */
+	private void drawBackground() {
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
 		this.drawBlankSpaces(true, true);
 	}
-
-	public void drawBlankSpaces(boolean overwrite, boolean shadow) { // could be used for animations
+	
+	/**
+	 * Sets FPS every loop
+	 */
+	public void refreshRate() {
+		display.syncGameLogic(FPS);
+	}
+	
+	/**
+	 * 
+	 * @param overwrite
+	 * @param shadow
+	 * 
+	 * Draws the blank spaces. Overwrite allows taken spaces to be overwritten, shadow includes a 3D shadow effect.
+	 */
+	private void drawBlankSpaces(boolean overwrite, boolean shadow) {
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {				
 				if (overwrite || this.getOccupied(i, j).getPlayer() == 0) {
@@ -170,26 +174,37 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 			}
 		}
 	}
-
+	
+	/**
+	 * Draws the space just taken in the current move.
+	 */
 	public void drawTakenSpaces() {
 		for (int j = 0; j < ROWS; j++) {
-			if (this.isOccupied(rowCurrentlySelected, j) && !this.getOccupied(rowCurrentlySelected, j).getDrawn()) {
-				this.getOccupied(rowCurrentlySelected, j).setDrawn(true);
-				display.setColor(this.getOccupied(rowCurrentlySelected, j).getColor());
-				display.drawFilledCircle(rowCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
+			if (this.isOccupied(columnCurrentlySelected, j) && !this.getOccupied(columnCurrentlySelected, j).getDrawn()) {
+				this.getOccupied(columnCurrentlySelected, j).setDrawn(true);
+				display.setColor(this.getOccupied(columnCurrentlySelected, j).getColor());
+				display.drawFilledCircle(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 			}
 		}
 	}
 
+	/**
+	 * Draws an arrow over the currently selected column.
+	 */
 	public void drawArrowSelected() {
 		display.setColor(Color.white);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
-		int y = ARROW_START;
-		int x = rowCurrentlySelected * DISTANCE_HOLES_X + BORDER_X;
-		this.drawArrow(x, y);
+		this.drawArrow(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, ARROW_START);
 	}
-
-	public void drawArrow(int px, int py) { // optimize?
+	
+	/**
+	 * 
+	 * @param px
+	 * @param py
+	 * 
+	 * Draws an arrow at the given position.
+	 */
+	private void drawArrow(int px, int py) {
 		display.setColor(this.getCurrentPlayerColor());
 		display.drawFillRect(px + RADIUS / 4, py, ARROW_WIDTH, ARROW_HEIGHT);
 
@@ -201,11 +216,15 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
+	/**
+	 * Makes a black banner displaying the winner of the game.
+	 */
 	public void displayWinner() {
 		display.setColor(Color.black);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
-		display.drawFancyString(BORDER, 100, "Player " + this.getNextPlayer() + " wins!", this.getNextPlayerColor(), 100);
+		display.drawFancyString(20, 100, "Player " + turnPlayer + " wins!", this.getCurrentPlayerColor(), 100);
 		
+		// Draws a line through the connected 4
 		int calcX = BORDER_X + RADIUS / 2;
 		int calcY = BORDER_Y + BACKGROUND_START + RADIUS / 2;
 		
@@ -214,14 +233,24 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		display.setPenWidth(1.0f);
 	}
 
-	public boolean rowIsSelected() {
-		return this.rowSelected;
+	public boolean columnIsSelected() {
+		return this.columnSelected;
 	}
 
-	public int rowSelected() {
-		return this.rowCurrentlySelected;
+	public int columnSelected() {
+		return this.columnCurrentlySelected;
 	}
-
+	
+	private int getRowCurrentlyPlaced() {
+		return this.rowCurrentlyPlaced;
+	}
+	
+	/**
+	 * 
+	 * @param column
+	 * @param row
+	 * @return boolean - if spot is taken or not
+	 */
 	private boolean isOccupied(int column, int row) {
 		if (this.getOccupied(column, row).getPlayer() != 0) {
 			return true;
@@ -229,62 +258,71 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 			return false;
 		}
 	}
-
+	
+	/**
+	 * 
+	 * @param column
+	 * @param row
+	 * 
+	 * Sets a current spot to taken.
+	 */
 	private void setOccupied(int column, int row) {
 		if (!this.isOccupied(column, row)) {
-			this.getOccupied(column, row).setPlayer(this.getCurrentPlayer());
+			this.getOccupied(column, row).setPlayer(turnPlayer);
 		}
 	}
 	
+	/**
+	 * 
+	 * @param column
+	 * @param row
+	 * @return Piece - Piece at given coordinates
+	 */
 	private Piece getOccupied(int column, int row) {
-		return contents[column][row];
+		return this.contents[column][row];
+	}
+	
+	public int getTurnCount() {
+		return turnCount;
 	}
 
-	private int getCurrentPlayer() {
-		return turnPlayer;
+	private int getNextPlayer() {
+		return turnPlayer == 1 ? 2 : 1;
+	}
+	
+	private void setNextPlayer() {
+		turnPlayer = getNextPlayer();
 	}
 
-	public int getNextPlayer() {
-		return this.getCurrentPlayer() == 1 ? 2 : 1;
+	private Color getCurrentPlayerColor() {
+		return turnPlayer == 1 ? Color.red : Color.yellow;
 	}
-
-	public Color getCurrentPlayerColor() {
-		return this.getCurrentPlayer() == 1 ? Color.red : Color.yellow;
-	}
-
-	public Color getNextPlayerColor() {
-		return this.getCurrentPlayer() == 1 ? Color.yellow : Color.red;
-	}
-
-	public int switchPlayer() {
-		int player = this.getCurrentPlayer();
-		
-		if (player == 1) {
-			turnPlayer = 2;
-		}
-
-		if (player == 2) {
-			turnPlayer = 1;
-		}
-		
-
+	
+	public void switchPlayer() {		
+		this.setNextPlayer();
 		this.drawArrowSelected();
-
-		return turnPlayer;
 	}
-
+	
+	/**
+	 * 
+	 * @param column
+	 * @return boolean - if piece dropped successfully
+	 * 
+	 * Virtually drops a Piece into the bottom most slot.
+	 */
 	public boolean dropPiece(int column) {
-		this.rowSelected = false;
+		this.columnSelected = false;
 		if (column >= COLUMNS) {
 			return false;
 		}
-
+		
+		//Finds the first free slot from the bottom
 		for (int i = ROWS - 1; i > -1; i--) {
 			if (!isOccupied(column, i)) {
 				this.getOccupied(column, i).setColor(getCurrentPlayerColor());
 				this.setOccupied(column, i);
-				this.switchPlayer();
-				this.turnCount++;
+				rowCurrentlyPlaced = i;
+				turnCount++;
 				return true;
 			}
 		}
@@ -292,75 +330,119 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		return false;
 	}
 
+	/**
+	 * 
+	 * @return boolean - if entire grid is taken
+	 */
 	public boolean checkFull() {
 		return (turnCount == TURN_COUNT_MAX);
 	}
+	
+	/**
+	 * 
+	 * @return boolean - if a winning condition has been fulfilled
+	 * 
+	 * Checks the grid for a Connect 4
+	 */
+	public boolean checkFour() {
+		int player = turnPlayer;
+		int column = this.columnSelected();
+		int row = this.getRowCurrentlyPlaced();
+		int l = 0;
+		
+		// Checks the currently selected column for 4 in a row
+		for (int i = 0; i < ROWS; i++) {
+			if (this.getOccupied(column, i).getPlayer() == player) {
+				l++;
+			} else {
+				l = 0;
+			}
 
-	public boolean checkFour() { // OPTIMIZE
-		int player = this.getNextPlayer();
+			if (l == 4) {
+				connectFourColumn1 = column;
+				connectFourColumn2 = column;
+				connectFourRow1 = i;
+				connectFourRow2 = i - 3;
+				return true;
+			}
+		}
+		
+		l = 0;
+		
+		// Checks the currently selected row for 4 in a row
+		for (int i = 0; i < COLUMNS; i++) {
+			if (this.getOccupied(i, row).getPlayer() == player) {
+				l++;
+				
+				if (connectFourColumn1 == -1) {
+					connectFourColumn1 = i;
+					connectFourColumn2 = i + 3;
+				}
+			} else {
+				l = 0;
+				connectFourColumn1 = -1;
+			}
+
+			if (l == 4) {
+				connectFourRow1 = row;
+				connectFourRow2 = row;
+				return true;
+			}
+		}
+		
+		// Checks all diagonals for 4 in a row (which is wasteful, but quite a bit easier to code)
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				if (i < COLUMNS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j).getPlayer() == player && this.getOccupied(i + 2, j).getPlayer() == player && this.getOccupied(i + 3, j).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i + 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j;
-					return true;
-				} else if (i > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j).getPlayer() == player && this.getOccupied(i - 2, j).getPlayer() == player && this.getOccupied(i - 3, j).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i - 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j;
-					return true;
-				} else if (j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i, j + 1).getPlayer() == player && this.getOccupied(i, j + 2).getPlayer() == player && this.getOccupied(i, j + 3).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j + 3;
-					return true;
-				} else if (j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i, j - 1).getPlayer() == player && this.getOccupied(i, j - 2).getPlayer() == player && this.getOccupied(i, j - 3).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j - 3;
-					return true;
-				} else if (i < COLUMNS - 3 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j - 1).getPlayer() == player && this.getOccupied(i + 2, j - 2).getPlayer() == player && this.getOccupied(i + 3, j - 3).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i + 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j - 3;
+				if (i < COLUMNS - 3 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j - 1).getPlayer() == player && this.getOccupied(i + 2, j - 2).getPlayer() == player && this.getOccupied(i + 3, j - 3).getPlayer() == player) {
+					connectFourColumn1 = i;
+					connectFourColumn2 = i + 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j - 3;
 					return true;
 				} else if (i < COLUMNS - 3 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j + 1).getPlayer() == player && this.getOccupied(i + 2, j + 2).getPlayer() == player && this.getOccupied(i + 3, j + 3).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i + 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j + 3;
+					connectFourColumn1 = i;
+					connectFourColumn2 = i + 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j + 3;
 					return true;
 				} else if (i > 2 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j + 1).getPlayer() == player && this.getOccupied(i - 2, j + 2).getPlayer() == player && this.getOccupied(i - 3, j + 3).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i - 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j + 3;
+					connectFourColumn1 = i;
+					connectFourColumn2 = i - 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j + 3;
 					return true;
 				} else if (i > 2 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j - 1).getPlayer() == player && this.getOccupied(i - 2, j - 2).getPlayer() == player && this.getOccupied(i - 3, j - 3).getPlayer() == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i - 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j - 3;
+					connectFourColumn1 = i;
+					connectFourColumn2 = i - 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j - 3;
 					return true;
 				}
 			}
 		}
-
+	
 		return false;
 	}
-
+	
+	/**
+	 * 
+	 * @return boolean - if wanted to play again
+	 * 
+	 * Asks the player in the console whether they want to play again or not.
+	 */
 	public boolean playAgain() {
-		System.out.println("Do you want to play again?\nTo replay, type 'y' or 'Y'");
+		System.out.println("Do you want to play again?\nTo replay, press Enter.\nTo stop, press Escape.");
+		
+		allowInputRestart = true;
 
-		char in = Input.readChar();
+		while (waitingForInput) {
+			this.refreshRate();
+		};
+		
+		waitingForInput = true;
+		allowInputRestart = false;
 
-		if (in == 'y' || in == 'Y') {
+		if (playAgain) {
 			display.clear();
 
 			for (int i = 0; i < COLUMNS; i++) {
@@ -370,9 +452,8 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 				}
 			}
 
-			turnPlayer = 1;
 			turnCount = 0;
-			rowCurrentlySelected = 3;
+			columnCurrentlySelected = 3;
 			this.drawBackground();
 			this.drawArrowSelected();
 			return true;
