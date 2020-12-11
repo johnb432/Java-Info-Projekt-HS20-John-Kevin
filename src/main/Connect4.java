@@ -8,19 +8,6 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class Connect4 {
-	private static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-	private static final int WIDTH = (int) (0.5 * gd.getDisplayMode().getWidth());
-	private static final int HEIGHT = (int) (0.75 * gd.getDisplayMode().getHeight());
-	private static int RADIUS = 100;
-	private static int ARROW_WIDTH = RADIUS / 2;
-	private static int ARROW_HEIGHT = RADIUS / 4 * 3;
-	private static int ARROW_START = 20;
-	private static int BORDER_X = 20;
-	private static int BORDER_Y = 20;
-	private static int DISTANCE_HOLES_X = 140;
-	private static int DISTANCE_HOLES_Y = 140;
-	private static int BACKGROUND_START = 150;
-	
 	private static final int COLUMNS = 7;
 	private static final int ROWS = 6;
 	private static final int OFFSET_X = 0;
@@ -28,8 +15,24 @@ public class Connect4 {
 	private static final int TURN_COUNT_MAX = 42;
 	private static final int FPS = 144;
 	
+	private static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+	private static final int WIDTH = (int) (0.5 * gd.getDisplayMode().getWidth());
+	private static final int HEIGHT = (int) (0.75 * gd.getDisplayMode().getHeight());
+	private static int RADIUS = (WIDTH + HEIGHT) / 20;
+	private static final int BACKGROUND_START = HEIGHT / 6;
+	private static int ARROW_WIDTH = RADIUS / 2;
+	private static int ARROW_HEIGHT = RADIUS / 4 * 3;
+	private static int ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
+	private static int DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
+	private static int DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
+	private static int BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
+	private static int BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
+	
 	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
 	private Piece[][] contents = new Piece [COLUMNS][ROWS];
+	
+	private int player1Wins = 0;
+	private int player2Wins = 0;
 	
 	private int turnPlayer = 1;
 	private int turnCount = 0;
@@ -39,8 +42,8 @@ public class Connect4 {
 	public boolean allowInput = false;
 	
 	private int columnCurrentlySelected = 3;
-	private int rowCurrentlyPlaced = 0;
-	private boolean columnSelected = false;
+	private int rowCurrentlySelected = 0;
+	private boolean isColumnSelected = false;
 	
 	private int connectFourColumn1 = -1;
 	private int connectFourColumn2 = -1;
@@ -72,28 +75,24 @@ public class Connect4 {
 	 * Calculates various variables for drawing the game.
 	 */
  	private void calcGraphics () {
-		DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
-		DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
-		
-		RADIUS = (WIDTH + HEIGHT) / 20;
-		
+ 		RADIUS = (WIDTH + HEIGHT) / 20;
+ 		
 		if (2 * RADIUS > DISTANCE_HOLES_X) {
-			RADIUS = DISTANCE_HOLES_X / 6 * 5;
-		}
-		 
-		if (2 * RADIUS > DISTANCE_HOLES_Y) {
-			RADIUS = DISTANCE_HOLES_Y / 6 * 5;
+			RADIUS = DISTANCE_HOLES_X / 8 * 7;
 		}
 		
-		BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
-		BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
+		if (2 * RADIUS > DISTANCE_HOLES_Y) {
+			RADIUS = DISTANCE_HOLES_Y / 8 * 7;
+		}
 		
 		ARROW_WIDTH = RADIUS / 2;
 		ARROW_HEIGHT = RADIUS / 4 * 3;
-		
-		BACKGROUND_START = HEIGHT / 6;
-		
 		ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
+		
+		DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
+		DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
+		BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
+		BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
 	}
 
     /**
@@ -117,7 +116,7 @@ public class Connect4 {
 				}
 
 				if (e.getKeyCode() == KeyEvent.VK_DOWN && allowInput) {
-					columnSelected = true;
+					isColumnSelected = true;
 					allowInput = false;
 				}
 				
@@ -178,13 +177,11 @@ public class Connect4 {
 	/**
 	 * Draws the space just taken in the current move.
 	 */
-	public void drawTakenSpaces() {
-		for (int j = 0; j < ROWS; j++) {
-			if (this.isOccupied(columnCurrentlySelected, j) && !this.getOccupied(columnCurrentlySelected, j).getDrawn()) {
-				this.getOccupied(columnCurrentlySelected, j).setDrawn(true);
-				display.setColor(this.getOccupied(columnCurrentlySelected, j).getColor());
-				display.drawFilledCircle(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
-			}
+	public void drawTakenSpaces() {		
+		if (this.isOccupied(columnCurrentlySelected, rowCurrentlySelected) && !this.getOccupied(columnCurrentlySelected, rowCurrentlySelected).getDrawn()) {
+			this.getOccupied(columnCurrentlySelected, rowCurrentlySelected).setDrawn(true);
+			display.setColor(this.getOccupied(columnCurrentlySelected, rowCurrentlySelected).getColor());
+			display.drawFilledCircle(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, rowCurrentlySelected * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 		}
 	}
 
@@ -195,6 +192,7 @@ public class Connect4 {
 		display.setColor(Color.white);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
 		this.drawArrow(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, ARROW_START);
+		this.displayScore(Color.black);
 	}
 	
 	/**
@@ -224,6 +222,15 @@ public class Connect4 {
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
 		display.drawFancyString(20, 100, "Player " + turnPlayer + " wins!", this.getCurrentPlayerColor(), 100);
 		
+		// Adds a win to the winner
+		if (turnPlayer == 1) {
+			player1Wins++;
+		} else if (turnPlayer == 2) {
+			player2Wins++;
+		}
+		
+		this.displayScore(Color.green);
+		
 		// Draws a line through the connected 4
 		int calcX = BORDER_X + RADIUS / 2;
 		int calcY = BORDER_Y + BACKGROUND_START + RADIUS / 2;
@@ -232,17 +239,23 @@ public class Connect4 {
 		display.drawLine(connectFourColumn1 * DISTANCE_HOLES_X + calcX, connectFourRow1 * DISTANCE_HOLES_Y + calcY, connectFourColumn2 * DISTANCE_HOLES_X + calcX, connectFourRow2 * DISTANCE_HOLES_Y + calcY);
 		display.setPenWidth(1.0f);
 	}
+	
+	/**
+	 * 
+	 * @param c
+	 * 
+	 * Displays the current score in given color
+	 */
+	public void displayScore(Color c) {
+		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 3, "Player 1 " + player1Wins + " : " + player2Wins + " Player 2", c, 20);
+	}
 
 	public boolean columnIsSelected() {
-		return this.columnSelected;
+		return isColumnSelected;
 	}
 
-	public int columnSelected() {
-		return this.columnCurrentlySelected;
-	}
-	
-	private int getRowCurrentlyPlaced() {
-		return this.rowCurrentlyPlaced;
+	public int isColumnSelected() {
+		return columnCurrentlySelected;
 	}
 	
 	/**
@@ -311,7 +324,7 @@ public class Connect4 {
 	 * Virtually drops a Piece into the bottom most slot.
 	 */
 	public boolean dropPiece(int column) {
-		this.columnSelected = false;
+		isColumnSelected = false;
 		if (column >= COLUMNS) {
 			return false;
 		}
@@ -321,7 +334,7 @@ public class Connect4 {
 			if (!isOccupied(column, i)) {
 				this.getOccupied(column, i).setColor(getCurrentPlayerColor());
 				this.setOccupied(column, i);
-				rowCurrentlyPlaced = i;
+				rowCurrentlySelected = i;
 				turnCount++;
 				return true;
 			}
@@ -346,19 +359,19 @@ public class Connect4 {
 	 */
 	public boolean checkFour() {
 		int player = turnPlayer;
-		int column = this.columnSelected();
-		int row = this.getRowCurrentlyPlaced();
-		int l = 0;
+		int column = this.isColumnSelected();
+		int row = rowCurrentlySelected;
+		int fourInARow = 0;
 		
 		// Checks the currently selected column for 4 in a row
 		for (int i = 0; i < ROWS; i++) {
 			if (this.getOccupied(column, i).getPlayer() == player) {
-				l++;
+				fourInARow++;
 			} else {
-				l = 0;
+				fourInARow = 0;
 			}
 
-			if (l == 4) {
+			if (fourInARow == 4) {
 				connectFourColumn1 = column;
 				connectFourColumn2 = column;
 				connectFourRow1 = i;
@@ -367,23 +380,23 @@ public class Connect4 {
 			}
 		}
 		
-		l = 0;
+		fourInARow = 0;
 		
 		// Checks the currently selected row for 4 in a row
 		for (int i = 0; i < COLUMNS; i++) {
 			if (this.getOccupied(i, row).getPlayer() == player) {
-				l++;
+				fourInARow++;
 				
 				if (connectFourColumn1 == -1) {
 					connectFourColumn1 = i;
 					connectFourColumn2 = i + 3;
 				}
 			} else {
-				l = 0;
+				fourInARow = 0;
 				connectFourColumn1 = -1;
 			}
 
-			if (l == 4) {
+			if (fourInARow == 4) {
 				connectFourRow1 = row;
 				connectFourRow2 = row;
 				return true;
@@ -431,7 +444,7 @@ public class Connect4 {
 	 * Asks the player in the console whether they want to play again or not.
 	 */
 	public boolean playAgain() {
-		System.out.println("Do you want to play again?\nTo replay, press Enter.\nTo stop, press Escape.");
+		System.out.println("Do you want to play again?\nTo replay, press Enter.\nTo stop, press Escape.\n");
 		
 		allowInputRestart = true;
 
@@ -454,6 +467,8 @@ public class Connect4 {
 
 			turnCount = 0;
 			columnCurrentlySelected = 3;
+			
+			// Refreshes background and arrow
 			this.drawBackground();
 			this.drawArrowSelected();
 			return true;

@@ -19,20 +19,20 @@ public class Game {
 				game.refreshRate();
 				
 				// Prevents unnecessary updating of graphics; only responds to change
-				if (game.columnSelected() != oldSelected) {
+				if (game.isColumnSelected() != oldSelected) {
 					game.drawArrowSelected();
-					oldSelected = game.columnSelected();
+					oldSelected = game.isColumnSelected();
 				}
 			}
 			
 			// If a piece is successfully dropped, it will switch players at the end of the loop
-			boolean success = game.dropPiece(game.columnSelected());
+			boolean success = game.dropPiece(game.isColumnSelected());
 			
 			// Draws the taken space in this move
 			game.drawTakenSpaces();
 
 			// End game checks
-			if (game.getTurnCount() > 7 && game.checkFour()) {
+			if (game.getTurnCount() > 6 && game.checkFour()) {
 				game.displayWinner();
 				if (!game.playAgain()) {
 					break;
