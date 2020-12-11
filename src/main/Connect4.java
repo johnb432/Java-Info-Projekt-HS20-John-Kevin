@@ -1,6 +1,8 @@
 package main;
 
 import java.awt.Color;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -12,30 +14,33 @@ import hevs.graphics.FunGraphics;
 
 public class Connect4 extends JPanel implements MouseMotionListener, MouseListener {
 	private static final long serialVersionUID = 1L;
-	private static final int WIDTH = 1000;
-	private static final int HEIGHT = 1000;
+	private static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+	private static final int WIDTH = (int) (0.5 * gd.getDisplayMode().getWidth());
+	private static final int HEIGHT = (int) (0.75 * gd.getDisplayMode().getHeight());
 	private static int RADIUS = 100;
-	private static final int ARROW_WIDTH = RADIUS / 2;
-	private static final int ARROW_HEIGHT = RADIUS / 4 * 3;
-	private static final int ARROW_START = 20;
+	private static int ARROW_WIDTH = RADIUS / 2;
+	private static int ARROW_HEIGHT = RADIUS / 4 * 3;
+	private static int ARROW_START = 20;
 	private static final int BORDER = 20;
 	private static final int SAFETY_MARGIN = 20;
 	private static int BORDER_X = 20;
 	private static int BORDER_Y = 20;
 	private static int DISTANCE_HOLES_X = 140;
 	private static int DISTANCE_HOLES_Y = 140;
-	private static final int BACKGROUND_START = 150;
+	private static int BACKGROUND_START = 150;
+	
 	private static final int COLUMNS = 7;
 	private static final int ROWS = 6;
-	private static final int OFFSET_X = 200;
-	private static final int OFFSET_Y = 200;
-	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
-
-	private int[][] contents = new int[COLUMNS][ROWS];
-	private int turnPlayer = 1;
-	private int turnCount = 0;
+	private static final int OFFSET_X = 0;
+	private static final int OFFSET_Y = 0;
 	private static final int TURN_COUNT_MAX = 42;
 	private static final int FPS = 144;
+	
+	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
+	private Piece[][] contents = new Piece [COLUMNS][ROWS];
+	
+	private int turnPlayer = 1;
+	private int turnCount = 0;
 	private int rowCurrentlySelected = 3;
 	private boolean rowSelected = false;
 	private int connectFourColumn1 = 0;
@@ -44,8 +49,17 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	private int connectFourRow2 = 0;
 
 	public void init() {
+		this.setContents();
 		this.drawBackground();
 		this.keyboardInput();
+	}
+	
+	private void setContents() {		
+		for (int i = 0; i < COLUMNS; i++) {
+			for (int j = 0; j < ROWS; j++) {
+				this.contents[i][j] = new Piece (i, j);
+			}
+		}
 	}
 
 	public void refreshRate() {
@@ -83,7 +97,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
      
     public void mouseClicked(MouseEvent e) {}
 
-	public void keyboardInput() { // currently not in use
+	public void keyboardInput() {
 		display.setKeyManager(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
@@ -107,26 +121,33 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		});
 	}
 
-	/*
  	private void calcGraphics () { // remember that circles don't start at circle centers!!!!!!!!
-		DISTANCE_HOLES_X = (WIDTH) / (COLUMNS + 1);
-		DISTANCE_HOLES_Y = (HEIGHT) / (ROWS + 1); BORDER_X = (WIDTH - ((COLUMNS - 1) * DISTANCE_HOLES_X)) / 2 - SAFETY_MARGIN;
-		BORDER_Y = (HEIGHT -
-		BACKGROUND_START - ((ROWS - 1) * DISTANCE_HOLES_Y)) / 2 - SAFETY_MARGIN;
-		RADIUS = (WIDTH + HEIGHT) / 20;
-		 
-		if (2 * RADIUS> DISTANCE_HOLES_X) {
-			RADIUS = DISTANCE_HOLES_X - 10;
+		DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
+		DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
+		
+		RADIUS = (WIDTH + HEIGHT) / 20; // TODO
+		
+		if (2 * RADIUS > DISTANCE_HOLES_X) {
+			RADIUS = DISTANCE_HOLES_X / 6 * 5;
 		}
 		 
-		if (2 * RADIUS> DISTANCE_HOLES_Y) {
-			RADIUS = DISTANCE_HOLES_Y - 10;
+		if (2 * RADIUS > DISTANCE_HOLES_Y) {
+			RADIUS = DISTANCE_HOLES_Y / 6 * 5;
 		}
+		
+		BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
+		BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
+		
+		ARROW_WIDTH = RADIUS / 2;
+		ARROW_HEIGHT = RADIUS / 4 * 3;
+		
+		BACKGROUND_START = HEIGHT / 6;
+		
+		ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
 	}
-	*/
 
 	public void drawBackground() {
-		//this.calcGraphics();
+		this.calcGraphics();
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
 		this.drawBlankSpaces(true, true);
@@ -134,8 +155,8 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 
 	public void drawBlankSpaces(boolean overwrite, boolean shadow) { // could be used for animations
 		for (int i = 0; i < COLUMNS; i++) {
-			for (int j = 0; j < ROWS; j++) {
-				if (overwrite || contents[i][j] == 0) {
+			for (int j = 0; j < ROWS; j++) {				
+				if (overwrite || this.getOccupied(i, j).getPlayer() == 0) {
 					display.setColor(Color.white);
 					display.drawFilledCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 
@@ -151,17 +172,11 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	public void drawTakenSpaces() {
-		for (int i = 0; i < COLUMNS; i++) { // optimize?
-			for (int j = 0; j < ROWS; j++) {
-				if (this.isOccupied(i, j)) {
-					if (contents[i][j] == 1) {
-						display.setColor(Color.red);
-					} else if (contents[i][j] == 2) {
-						display.setColor(Color.yellow);
-					}
-
-					display.drawFilledCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
-				}
+		for (int j = 0; j < ROWS; j++) {
+			if (this.isOccupied(rowCurrentlySelected, j) && !this.getOccupied(rowCurrentlySelected, j).getDrawn()) {
+				this.getOccupied(rowCurrentlySelected, j).setDrawn(true);
+				display.setColor(this.getOccupied(rowCurrentlySelected, j).getColor());
+				display.drawFilledCircle(rowCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 			}
 		}
 	}
@@ -208,9 +223,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 	}
 
 	private boolean isOccupied(int column, int row) {
-		int content = contents[column][row];
-
-		if (content == 1 || content == 2) {
+		if (this.getOccupied(column, row).getPlayer() != 0) {
 			return true;
 		} else {
 			return false;
@@ -219,8 +232,12 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 
 	private void setOccupied(int column, int row) {
 		if (!this.isOccupied(column, row)) {
-			contents[column][row] = this.getCurrentPlayer();
+			this.getOccupied(column, row).setPlayer(this.getCurrentPlayer());
 		}
+	}
+	
+	private Piece getOccupied(int column, int row) {
+		return contents[column][row];
 	}
 
 	private int getCurrentPlayer() {
@@ -241,6 +258,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 
 	public int switchPlayer() {
 		int player = this.getCurrentPlayer();
+		
 		if (player == 1) {
 			turnPlayer = 2;
 		}
@@ -248,6 +266,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		if (player == 2) {
 			turnPlayer = 1;
 		}
+		
 
 		this.drawArrowSelected();
 
@@ -262,6 +281,7 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 
 		for (int i = ROWS - 1; i > -1; i--) {
 			if (!isOccupied(column, i)) {
+				this.getOccupied(column, i).setColor(getCurrentPlayerColor());
 				this.setOccupied(column, i);
 				this.switchPlayer();
 				this.turnCount++;
@@ -280,49 +300,49 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		int player = this.getNextPlayer();
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				if (i < COLUMNS - 3 && contents[i][j] == player && contents[i + 1][j] == player && contents[i + 2][j] == player && contents[i + 3][j] == player) {
+				if (i < COLUMNS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j).getPlayer() == player && this.getOccupied(i + 2, j).getPlayer() == player && this.getOccupied(i + 3, j).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i + 3;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j;
 					return true;
-				} else if (i > 2 && contents[i][j] == player && contents[i - 1][j] == player && contents[i - 2][j] == player && contents[i - 3][j] == player) {
+				} else if (i > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j).getPlayer() == player && this.getOccupied(i - 2, j).getPlayer() == player && this.getOccupied(i - 3, j).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i - 3;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j;
 					return true;
-				} else if (j < ROWS - 3 && contents[i][j] == player && contents[i][j + 1] == player && contents[i][j + 2] == player && contents[i][j + 3] == player) {
+				} else if (j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i, j + 1).getPlayer() == player && this.getOccupied(i, j + 2).getPlayer() == player && this.getOccupied(i, j + 3).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j + 3;
 					return true;
-				} else if (j > 2 && contents[i][j] == player && contents[i][j - 1] == player && contents[i][j - 2] == player && contents[i][j - 3] == player) {
+				} else if (j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i, j - 1).getPlayer() == player && this.getOccupied(i, j - 2).getPlayer() == player && this.getOccupied(i, j - 3).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j - 3;
 					return true;
-				} else if (i < COLUMNS - 3 && j > 2 && contents[i][j] == player && contents[i + 1][j - 1] == player && contents[i + 2][j - 2] == player && contents[i + 3][j - 3] == player) {
+				} else if (i < COLUMNS - 3 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j - 1).getPlayer() == player && this.getOccupied(i + 2, j - 2).getPlayer() == player && this.getOccupied(i + 3, j - 3).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i + 3;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j - 3;
 					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i + 1][j + 1] == player && contents[i + 2][j + 2] == player && contents[i + 3][j + 3] == player) {
+				} else if (i < COLUMNS - 3 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j + 1).getPlayer() == player && this.getOccupied(i + 2, j + 2).getPlayer() == player && this.getOccupied(i + 3, j + 3).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i + 3;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j + 3;
 					return true;
-				} else if (i > 2 && j < ROWS - 3 && contents[i][j] == player && contents[i - 1][j + 1] == player && contents[i - 2][j + 2] == player && contents[i - 3][j + 3] == player) {
+				} else if (i > 2 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j + 1).getPlayer() == player && this.getOccupied(i - 2, j + 2).getPlayer() == player && this.getOccupied(i - 3, j + 3).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i - 3;
 					this.connectFourRow1 = j;
 					this.connectFourRow2 = j + 3;
 					return true;
-				} else if (i > 2 && j > 2 && contents[i][j] == player && contents[i - 1][j - 1] == player && contents[i - 2][j - 2] == player && contents[i - 3][j - 3] == player) {
+				} else if (i > 2 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j - 1).getPlayer() == player && this.getOccupied(i - 2, j - 2).getPlayer() == player && this.getOccupied(i - 3, j - 3).getPlayer() == player) {
 					this.connectFourColumn1 = i;
 					this.connectFourColumn2 = i - 3;
 					this.connectFourRow1 = j;
@@ -345,7 +365,8 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 
 			for (int i = 0; i < COLUMNS; i++) {
 				for (int j = 0; j < ROWS; j++) {
-					contents[i][j] = 0;
+					this.getOccupied(i, j).setPlayer(0);
+					this.getOccupied(i, j).setDrawn(false);
 				}
 			}
 
