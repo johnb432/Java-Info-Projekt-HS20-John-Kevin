@@ -410,38 +410,6 @@ public class Connect4 {
 			}
 		}
 
-		// Checks all diagonals for 4 in a row (which is wasteful, but quite a bit easier to code)
-		/*
-		for (int i = 0; i < COLUMNS; i++) {
-			for (int j = 0; j < ROWS; j++) {
-				if (i < COLUMNS - 3 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j - 1).getPlayer() == player && this.getOccupied(i + 2, j - 2).getPlayer() == player && this.getOccupied(i + 3, j - 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i + 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j - 3;
-					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j + 1).getPlayer() == player && this.getOccupied(i + 2, j + 2).getPlayer() == player && this.getOccupied(i + 3, j + 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i + 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j + 3;
-					return true;
-				} else if (i > 2 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j + 1).getPlayer() == player && this.getOccupied(i - 2, j + 2).getPlayer() == player && this.getOccupied(i - 3, j + 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i - 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j + 3;
-					return true;
-				} else if (i > 2 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j - 1).getPlayer() == player && this.getOccupied(i - 2, j - 2).getPlayer() == player && this.getOccupied(i - 3, j - 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i - 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j - 3;
-					return true;
-				}
-			}
-		}*/
-
 		// Checks all descending diagonals, top down
 		int x = column - row;
 		int y = 0;
