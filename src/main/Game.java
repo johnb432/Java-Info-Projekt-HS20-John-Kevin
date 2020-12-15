@@ -48,5 +48,7 @@ public class Game {
 				game.switchPlayer();
 			}
 		}
+		
+		System.exit(1);
 	}
 }
