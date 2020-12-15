@@ -38,7 +38,7 @@ public class Game {
 					break;
 				}
 			} else if (game.checkFull()) {
-				System.out.println("Nobody wins.");
+				game.displayNobody();
 				if (!game.playAgain()) {
 					break;
 				}

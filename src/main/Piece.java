@@ -3,46 +3,46 @@ package main;
 import java.awt.Color;
 
 public class Piece {
-	private int column;
-	private int row;
+	private int column = 0;
+	private int row = 0;
 	private Color color = Color.white;
 	private int player = 0;
 	private boolean isDrawn = false;
 	
 	public Piece (int c, int r) {
-		this.column = c;
-		this.row = r;
-		this.color = Color.white;
-		this.player = 0;
-		this.isDrawn = false;
+		column = c;
+		row = r;
+		color = Color.white;
+		player = 0;
+		isDrawn = false;
 	}
 	
 	public void setPiece (int c, int r) {
-		this.column = c;
-		this.row = r;
+		column = c;
+		row = r;
 	}
 	
 	public int getPlayer () {
-		return this.player;
+		return player;
 	}
 	
 	public void setPlayer (int n) {
-		this.player = n;
+		player = n;
 	}
 	
 	public boolean getDrawn () {
-		return this.isDrawn;
+		return isDrawn;
 	}
 	
 	public void setDrawn (boolean b) {
-		this.isDrawn = b;
+		isDrawn = b;
 	}
 	
 	public void setColor(Color c) {
-		this.color = c;
+		color = c;
 	}
 	
 	public Color getColor() {
-		return this.color;
+		return color;
 	}
 }

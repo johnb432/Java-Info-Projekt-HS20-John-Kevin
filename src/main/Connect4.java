@@ -220,7 +220,7 @@ public class Connect4 {
 	public void displayWinner() {
 		display.setColor(Color.black);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
-		display.drawFancyString(20, 100, "Player " + turnPlayer + " wins!", this.getCurrentPlayerColor(), 100);
+		display.drawFancyString(BORDER_X / 2, BACKGROUND_START / 3 * 2, "Player " + turnPlayer + " wins!", this.getCurrentPlayerColor(), BACKGROUND_START / 2);
 		
 		// Adds a win to the winner
 		if (turnPlayer == 1) {
@@ -241,13 +241,24 @@ public class Connect4 {
 	}
 	
 	/**
+	 * Makes a black banner displaying the winner of the game.
+	 */
+	public void displayNobody() {
+		display.setColor(Color.black);
+		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
+		display.drawFancyString(BORDER_X / 2, BACKGROUND_START / 3 * 2, "Nobody wins.", Color.white, BACKGROUND_START / 2);
+		
+		this.displayScore(Color.green);
+	}
+	
+	/**
 	 * 
 	 * @param c
 	 * 
 	 * Displays the current score in given color
 	 */
 	public void displayScore(Color c) {
-		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 3, "Player 1 " + player1Wins + " : " + player2Wins + " Player 2", c, 20);
+		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 2, "Player 1 " + player1Wins + " : " + player2Wins + " Player 2", c, BACKGROUND_START / 8);
 	}
 
 	public boolean columnIsSelected() {
@@ -364,7 +375,7 @@ public class Connect4 {
 		int fourInARow = 0;
 		
 		// Checks the currently selected column for 4 in a row
-		for (int i = 0; i < ROWS; i++) {
+		for (int i = rowCurrentlySelected; i < ROWS; i++) {
 			if (this.getOccupied(column, i).getPlayer() == player) {
 				fourInARow++;
 			} else {
@@ -374,8 +385,8 @@ public class Connect4 {
 			if (fourInARow == 4) {
 				connectFourColumn1 = column;
 				connectFourColumn2 = column;
-				connectFourRow1 = i;
-				connectFourRow2 = i - 3;
+				connectFourRow1 = i - 3;
+				connectFourRow2 = i;
 				return true;
 			}
 		}
@@ -386,17 +397,13 @@ public class Connect4 {
 		for (int i = 0; i < COLUMNS; i++) {
 			if (this.getOccupied(i, row).getPlayer() == player) {
 				fourInARow++;
-				
-				if (connectFourColumn1 == -1) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i + 3;
-				}
 			} else {
 				fourInARow = 0;
-				connectFourColumn1 = -1;
 			}
 
 			if (fourInARow == 4) {
+				connectFourColumn1 = i - 3;
+				connectFourColumn2 = i;
 				connectFourRow1 = row;
 				connectFourRow2 = row;
 				return true;
