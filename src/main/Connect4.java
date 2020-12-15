@@ -1,141 +1,165 @@
 package main;
 
+import hevs.graphics.FunGraphics;
 import java.awt.Color;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import javax.swing.*;
 
-import hevs.graphics.FunGraphics;
-
-public class Connect4 extends JPanel implements MouseMotionListener, MouseListener {
-	private static final long serialVersionUID = 1L;
-	private static final int WIDTH = 1000;
-	private static final int HEIGHT = 1000;
-	private static int RADIUS = 100;
-	private static final int ARROW_WIDTH = RADIUS / 2;
-	private static final int ARROW_HEIGHT = RADIUS / 4 * 3;
-	private static final int ARROW_START = 20;
-	private static final int BORDER = 20;
-	private static final int SAFETY_MARGIN = 20;
-	private static int BORDER_X = 20;
-	private static int BORDER_Y = 20;
-	private static int DISTANCE_HOLES_X = 140;
-	private static int DISTANCE_HOLES_Y = 140;
-	private static final int BACKGROUND_START = 150;
+public class Connect4 {
 	private static final int COLUMNS = 7;
 	private static final int ROWS = 6;
-	private static final int OFFSET_X = 200;
-	private static final int OFFSET_Y = 200;
-	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
-
-	private int[][] contents = new int[COLUMNS][ROWS];
-	private int turnPlayer = 1;
-	private int turnCount = 0;
+	private static final int OFFSET_X = 0;
+	private static final int OFFSET_Y = 0;
 	private static final int TURN_COUNT_MAX = 42;
 	private static final int FPS = 144;
-	private int rowCurrentlySelected = 3;
-	private boolean rowSelected = false;
-	private int connectFourColumn1 = 0;
-	private int connectFourColumn2 = 0;
-	private int connectFourRow1 = 0;
-	private int connectFourRow2 = 0;
 
+	private static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+	private static final int WIDTH = (int) (0.5 * gd.getDisplayMode().getWidth());
+	private static final int HEIGHT = (int) (0.75 * gd.getDisplayMode().getHeight());
+	private static int RADIUS = (WIDTH + HEIGHT) / 20;
+	private static final int BACKGROUND_START = HEIGHT / 6;
+	private static int ARROW_WIDTH = RADIUS / 2;
+	private static int ARROW_HEIGHT = RADIUS / 4 * 3;
+	private static int ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
+	private static int DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
+	private static int DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
+	private static int BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
+	private static int BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
+
+	private FunGraphics display = new FunGraphics(WIDTH, HEIGHT, OFFSET_X, OFFSET_Y, "Connect 4", true);
+	private Piece[][] contents = new Piece [COLUMNS][ROWS];
+
+	private int player1Wins = 0;
+	private int player2Wins = 0;
+
+	private int turnPlayer = 1;
+	private int turnCount = 0;
+	private boolean playAgain = false;
+	private boolean waitingForInput = true;
+	private boolean allowInputRestart = false;
+	public boolean allowInput = false;
+
+	private int columnCurrentlySelected = 3;
+	private int rowCurrentlySelected = 0;
+	private boolean isColumnSelected = false;
+
+	private int connectFourColumn1 = -1;
+	private int connectFourColumn2 = -1;
+	private int connectFourRow1 = -1;
+	private int connectFourRow2 = -1;
+
+	/**
+	 * Sets up content of arrays, window background and keyboard input
+	 */
 	public void init() {
-		this.drawBackground();
+		this.setContents();
+		this.calcGraphics();
 		this.keyboardInput();
+		this.drawBackground();
 	}
 
-	public void refreshRate() {
-		display.syncGameLogic(FPS);
-	}
-	
-	/*public Connect4() {
-		display.addMouseListener(this);
-		addMouseListener(this);
-		
-		display.addMouseMotionListener(this);
-		addMouseMotionListener(this);
-	}*/
-
-	public void mouseDragged(MouseEvent e) {}
-
-	public void mouseMoved(MouseEvent e) {
+	/**
+	 * Makes a new basic Piece in every spot
+	 */
+	private void setContents() {
 		for (int i = 0; i < COLUMNS; i++) {
-			if (e.getX() <= i * DISTANCE_HOLES_X + BORDER_X + RADIUS + ARROW_WIDTH - SAFETY_MARGIN && e.getX() >= i * DISTANCE_HOLES_X + BORDER_X + ARROW_WIDTH - RADIUS + SAFETY_MARGIN) {
-				rowCurrentlySelected = i;
-				this.drawArrowSelected();
+			for (int j = 0; j < ROWS; j++) {
+				contents[i][j] = new Piece (i, j);
 			}
 		}
 	}
-	
-	public void mousePressed(MouseEvent e) {}
-     
-    public void mouseReleased(MouseEvent e) {
-    	rowSelected = true;
-    }
-     
-    public void mouseEntered(MouseEvent e) {}
-     
-    public void mouseExited(MouseEvent e) {}
-     
-    public void mouseClicked(MouseEvent e) {}
 
-	public void keyboardInput() { // currently not in use
+	/**
+	 * Calculates various variables for drawing the game.
+	 */
+ 	private void calcGraphics () {
+ 		RADIUS = (WIDTH + HEIGHT) / 20;
+
+		if (2 * RADIUS > DISTANCE_HOLES_X) {
+			RADIUS = DISTANCE_HOLES_X / 8 * 7;
+		}
+
+		if (2 * RADIUS > DISTANCE_HOLES_Y) {
+			RADIUS = DISTANCE_HOLES_Y / 8 * 7;
+		}
+
+		ARROW_WIDTH = RADIUS / 2;
+		ARROW_HEIGHT = RADIUS / 4 * 3;
+		ARROW_START = (BACKGROUND_START - (ARROW_HEIGHT + ARROW_WIDTH));
+
+		DISTANCE_HOLES_X = WIDTH / (COLUMNS + 1);
+		DISTANCE_HOLES_Y = (HEIGHT - BACKGROUND_START) / (ROWS + 1);
+		BORDER_X = DISTANCE_HOLES_X - RADIUS / 2;
+		BORDER_Y = DISTANCE_HOLES_Y - RADIUS / 2;
+	}
+
+    /**
+     * Handles keyboard input
+     */
+	private void keyboardInput() {
 		display.setKeyManager(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-					++rowCurrentlySelected;
-					if (rowCurrentlySelected > COLUMNS - 1) {
-						rowCurrentlySelected = COLUMNS - 1;
+				if (e.getKeyCode() == KeyEvent.VK_RIGHT && allowInput) {
+					++columnCurrentlySelected;
+					if (columnCurrentlySelected > COLUMNS - 1) {
+						columnCurrentlySelected = COLUMNS - 1;
 					}
 				}
 
-				if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-					--rowCurrentlySelected;
-					if (rowCurrentlySelected < 0) {
-						rowCurrentlySelected = 0;
+				if (e.getKeyCode() == KeyEvent.VK_LEFT && allowInput) {
+					--columnCurrentlySelected;
+					if (columnCurrentlySelected < 0) {
+						columnCurrentlySelected = 0;
 					}
 				}
 
-				if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-					rowSelected = true;
+				if (e.getKeyCode() == KeyEvent.VK_DOWN && allowInput) {
+					isColumnSelected = true;
+					allowInput = false;
+				}
+
+				if (e.getKeyCode() == KeyEvent.VK_ENTER && allowInputRestart) {
+					playAgain = true;
+					waitingForInput = false;
+				}
+
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE && allowInputRestart) {
+					playAgain = false;
+					waitingForInput = false;
 				}
 			}
 		});
 	}
 
-	/*
- 	private void calcGraphics () { // remember that circles don't start at circle centers!!!!!!!!
-		DISTANCE_HOLES_X = (WIDTH) / (COLUMNS + 1);
-		DISTANCE_HOLES_Y = (HEIGHT) / (ROWS + 1); BORDER_X = (WIDTH - ((COLUMNS - 1) * DISTANCE_HOLES_X)) / 2 - SAFETY_MARGIN;
-		BORDER_Y = (HEIGHT -
-		BACKGROUND_START - ((ROWS - 1) * DISTANCE_HOLES_Y)) / 2 - SAFETY_MARGIN;
-		RADIUS = (WIDTH + HEIGHT) / 20;
-		 
-		if (2 * RADIUS> DISTANCE_HOLES_X) {
-			RADIUS = DISTANCE_HOLES_X - 10;
-		}
-		 
-		if (2 * RADIUS> DISTANCE_HOLES_Y) {
-			RADIUS = DISTANCE_HOLES_Y - 10;
-		}
-	}
-	*/
-
-	public void drawBackground() {
-		//this.calcGraphics();
+ 	/**
+ 	 * Draws the background of the game
+ 	 */
+	private void drawBackground() {
 		display.setColor(Color.blue);
 		display.drawFillRect(0, BACKGROUND_START, WIDTH, HEIGHT - BACKGROUND_START);
 		this.drawBlankSpaces(true, true);
 	}
 
-	public void drawBlankSpaces(boolean overwrite, boolean shadow) { // could be used for animations
+	/**
+	 * Sets FPS every loop
+	 */
+	public void refreshRate() {
+		display.syncGameLogic(FPS);
+	}
+
+	/**
+	 *
+	 * @param overwrite
+	 * @param shadow
+	 *
+	 * Draws the blank spaces. Overwrite allows taken spaces to be overwritten, shadow includes a 3D shadow effect.
+	 */
+	private void drawBlankSpaces(boolean overwrite, boolean shadow) {
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				if (overwrite || contents[i][j] == 0) {
+				if (overwrite || this.getOccupied(i, j).getPlayer() == 0) {
 					display.setColor(Color.white);
 					display.drawFilledCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 
@@ -150,31 +174,35 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
+	/**
+	 * Draws the space just taken in the current move.
+	 */
 	public void drawTakenSpaces() {
-		for (int i = 0; i < COLUMNS; i++) { // optimize?
-			for (int j = 0; j < ROWS; j++) {
-				if (this.isOccupied(i, j)) {
-					if (contents[i][j] == 1) {
-						display.setColor(Color.red);
-					} else if (contents[i][j] == 2) {
-						display.setColor(Color.yellow);
-					}
-
-					display.drawFilledCircle(i * DISTANCE_HOLES_X + BORDER_X, j * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
-				}
-			}
+		if (this.isOccupied(columnCurrentlySelected, rowCurrentlySelected) && !this.getOccupied(columnCurrentlySelected, rowCurrentlySelected).getDrawn()) {
+			this.getOccupied(columnCurrentlySelected, rowCurrentlySelected).setDrawn(true);
+			display.setColor(this.getOccupied(columnCurrentlySelected, rowCurrentlySelected).getColor());
+			display.drawFilledCircle(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, rowCurrentlySelected * DISTANCE_HOLES_Y + BACKGROUND_START + BORDER_Y, RADIUS);
 		}
 	}
 
+	/**
+	 * Draws an arrow over the currently selected column.
+	 */
 	public void drawArrowSelected() {
 		display.setColor(Color.white);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
-		int y = ARROW_START;
-		int x = rowCurrentlySelected * DISTANCE_HOLES_X + BORDER_X;
-		this.drawArrow(x, y);
+		this.drawArrow(columnCurrentlySelected * DISTANCE_HOLES_X + BORDER_X, ARROW_START);
+		this.displayScore(Color.black);
 	}
 
-	public void drawArrow(int px, int py) { // optimize?
+	/**
+	 *
+	 * @param px
+	 * @param py
+	 *
+	 * Draws an arrow at the given position.
+	 */
+	private void drawArrow(int px, int py) {
 		display.setColor(this.getCurrentPlayerColor());
 		display.drawFillRect(px + RADIUS / 4, py, ARROW_WIDTH, ARROW_HEIGHT);
 
@@ -186,85 +214,139 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		}
 	}
 
+	/**
+	 * Makes a black banner displaying the winner of the game.
+	 */
 	public void displayWinner() {
 		display.setColor(Color.black);
 		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
-		display.drawFancyString(BORDER, 100, "Player " + this.getNextPlayer() + " wins!", this.getNextPlayerColor(), 100);
-		
+		display.drawFancyString(BORDER_X / 2, BACKGROUND_START / 3 * 2, "Player " + turnPlayer + " wins!", this.getCurrentPlayerColor(), BACKGROUND_START / 2);
+
+		// Adds a win to the winner
+		if (turnPlayer == 1) {
+			player1Wins++;
+		} else if (turnPlayer == 2) {
+			player2Wins++;
+		}
+
+		this.displayScore(Color.green);
+
+		// Draws a line through the connected 4
 		int calcX = BORDER_X + RADIUS / 2;
 		int calcY = BORDER_Y + BACKGROUND_START + RADIUS / 2;
-		
+
 		display.setPenWidth(4.0f);
 		display.drawLine(connectFourColumn1 * DISTANCE_HOLES_X + calcX, connectFourRow1 * DISTANCE_HOLES_Y + calcY, connectFourColumn2 * DISTANCE_HOLES_X + calcX, connectFourRow2 * DISTANCE_HOLES_Y + calcY);
 		display.setPenWidth(1.0f);
 	}
 
-	public boolean rowIsSelected() {
-		return this.rowSelected;
+	/**
+	 * Makes a black banner displaying the winner of the game.
+	 */
+	public void displayNobody() {
+		display.setColor(Color.black);
+		display.drawFillRect(0, 0, WIDTH, BACKGROUND_START);
+		display.drawFancyString(BORDER_X / 2, BACKGROUND_START / 3 * 2, "Nobody wins.", Color.white, BACKGROUND_START / 2);
+
+		this.displayScore(Color.green);
 	}
 
-	public int rowSelected() {
-		return this.rowCurrentlySelected;
+	/**
+	 *
+	 * @param c
+	 *
+	 * Displays the current score in given color
+	 */
+	public void displayScore(Color c) {
+		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 2, "Player 1 " + player1Wins + " : " + player2Wins + " Player 2", c, BACKGROUND_START / 8);
 	}
 
+	public boolean columnIsSelected() {
+		return isColumnSelected;
+	}
+
+	public int isColumnSelected() {
+		return columnCurrentlySelected;
+	}
+
+	/**
+	 *
+	 * @param column
+	 * @param row
+	 * @return boolean - if spot is taken or not
+	 */
 	private boolean isOccupied(int column, int row) {
-		int content = contents[column][row];
-
-		if (content == 1 || content == 2) {
+		if (this.getOccupied(column, row).getPlayer() != 0) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
+	/**
+	 *
+	 * @param column
+	 * @param row
+	 *
+	 * Sets a current spot to taken.
+	 */
 	private void setOccupied(int column, int row) {
 		if (!this.isOccupied(column, row)) {
-			contents[column][row] = this.getCurrentPlayer();
+			this.getOccupied(column, row).setPlayer(turnPlayer);
 		}
 	}
 
-	private int getCurrentPlayer() {
-		return turnPlayer;
+	/**
+	 *
+	 * @param column
+	 * @param row
+	 * @return Piece - Piece at given coordinates
+	 */
+	private Piece getOccupied(int column, int row) {
+		return this.contents[column][row];
 	}
 
-	public int getNextPlayer() {
-		return this.getCurrentPlayer() == 1 ? 2 : 1;
+	public int getTurnCount() {
+		return turnCount;
 	}
 
-	public Color getCurrentPlayerColor() {
-		return this.getCurrentPlayer() == 1 ? Color.red : Color.yellow;
+	private int getNextPlayer() {
+		return turnPlayer == 1 ? 2 : 1;
 	}
 
-	public Color getNextPlayerColor() {
-		return this.getCurrentPlayer() == 1 ? Color.yellow : Color.red;
+	private void setNextPlayer() {
+		turnPlayer = getNextPlayer();
 	}
 
-	public int switchPlayer() {
-		int player = this.getCurrentPlayer();
-		if (player == 1) {
-			turnPlayer = 2;
-		}
+	private Color getCurrentPlayerColor() {
+		return turnPlayer == 1 ? Color.red : Color.yellow;
+	}
 
-		if (player == 2) {
-			turnPlayer = 1;
-		}
-
+	public void switchPlayer() {
+		this.setNextPlayer();
 		this.drawArrowSelected();
-
-		return turnPlayer;
 	}
 
+	/**
+	 *
+	 * @param column
+	 * @return boolean - if piece dropped successfully
+	 *
+	 * Virtually drops a Piece into the bottom most slot.
+	 */
 	public boolean dropPiece(int column) {
-		this.rowSelected = false;
+		isColumnSelected = false;
 		if (column >= COLUMNS) {
 			return false;
 		}
 
+		//Finds the first free slot from the bottom
 		for (int i = ROWS - 1; i > -1; i--) {
 			if (!isOccupied(column, i)) {
+				this.getOccupied(column, i).setColor(getCurrentPlayerColor());
 				this.setOccupied(column, i);
-				this.switchPlayer();
-				this.turnCount++;
+				rowCurrentlySelected = i;
+				turnCount++;
 				return true;
 			}
 		}
@@ -272,86 +354,181 @@ public class Connect4 extends JPanel implements MouseMotionListener, MouseListen
 		return false;
 	}
 
+	/**
+	 *
+	 * @return boolean - if entire grid is taken
+	 */
 	public boolean checkFull() {
 		return (turnCount == TURN_COUNT_MAX);
 	}
 
-	public boolean checkFour() { // OPTIMIZE
-		int player = this.getNextPlayer();
+	/**
+	 *
+	 * @return boolean - if a winning condition has been fulfilled
+	 *
+	 * Checks the grid for a Connect 4
+	 */
+	public boolean checkFour() {
+		int player = turnPlayer;
+		int column = this.isColumnSelected();
+		int row = rowCurrentlySelected;
+		int fourInARow = 0;
+
+		// Checks the currently selected column for 4 in a row
+		for (int i = rowCurrentlySelected; i < ROWS; i++) {
+			if (this.getOccupied(column, i).getPlayer() == player) {
+				fourInARow++;
+			} else {
+				fourInARow = 0;
+			}
+
+			if (fourInARow == 4) {
+				connectFourColumn1 = column;
+				connectFourColumn2 = column;
+				connectFourRow1 = i - 3;
+				connectFourRow2 = i;
+				return true;
+			}
+		}
+
+		fourInARow = 0;
+
+		// Checks the currently selected row for 4 in a row
+		for (int i = 0; i < COLUMNS; i++) {
+			if (this.getOccupied(i, row).getPlayer() == player) {
+				fourInARow++;
+			} else {
+				fourInARow = 0;
+			}
+
+			if (fourInARow == 4) {
+				connectFourColumn1 = i - 3;
+				connectFourColumn2 = i;
+				connectFourRow1 = row;
+				connectFourRow2 = row;
+				return true;
+			}
+		}
+
+		// Checks all diagonals for 4 in a row (which is wasteful, but quite a bit easier to code)
+		/*
 		for (int i = 0; i < COLUMNS; i++) {
 			for (int j = 0; j < ROWS; j++) {
-				if (i < COLUMNS - 3 && contents[i][j] == player && contents[i + 1][j] == player && contents[i + 2][j] == player && contents[i + 3][j] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i + 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j;
+				if (i < COLUMNS - 3 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j - 1).getPlayer() == player && this.getOccupied(i + 2, j - 2).getPlayer() == player && this.getOccupied(i + 3, j - 3).getPlayer() == player) {
+					connectFourColumn1 = i;
+					connectFourColumn2 = i + 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j - 3;
 					return true;
-				} else if (i > 2 && contents[i][j] == player && contents[i - 1][j] == player && contents[i - 2][j] == player && contents[i - 3][j] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i - 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j;
+				} else if (i < COLUMNS - 3 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j + 1).getPlayer() == player && this.getOccupied(i + 2, j + 2).getPlayer() == player && this.getOccupied(i + 3, j + 3).getPlayer() == player) {
+					connectFourColumn1 = i;
+					connectFourColumn2 = i + 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j + 3;
 					return true;
-				} else if (j < ROWS - 3 && contents[i][j] == player && contents[i][j + 1] == player && contents[i][j + 2] == player && contents[i][j + 3] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j + 3;
+				} else if (i > 2 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j + 1).getPlayer() == player && this.getOccupied(i - 2, j + 2).getPlayer() == player && this.getOccupied(i - 3, j + 3).getPlayer() == player) {
+					connectFourColumn1 = i;
+					connectFourColumn2 = i - 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j + 3;
 					return true;
-				} else if (j > 2 && contents[i][j] == player && contents[i][j - 1] == player && contents[i][j - 2] == player && contents[i][j - 3] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j - 3;
-					return true;
-				} else if (i < COLUMNS - 3 && j > 2 && contents[i][j] == player && contents[i + 1][j - 1] == player && contents[i + 2][j - 2] == player && contents[i + 3][j - 3] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i + 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j - 3;
-					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && contents[i][j] == player && contents[i + 1][j + 1] == player && contents[i + 2][j + 2] == player && contents[i + 3][j + 3] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i + 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j + 3;
-					return true;
-				} else if (i > 2 && j < ROWS - 3 && contents[i][j] == player && contents[i - 1][j + 1] == player && contents[i - 2][j + 2] == player && contents[i - 3][j + 3] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i - 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j + 3;
-					return true;
-				} else if (i > 2 && j > 2 && contents[i][j] == player && contents[i - 1][j - 1] == player && contents[i - 2][j - 2] == player && contents[i - 3][j - 3] == player) {
-					this.connectFourColumn1 = i;
-					this.connectFourColumn2 = i - 3;
-					this.connectFourRow1 = j;
-					this.connectFourRow2 = j - 3;
+				} else if (i > 2 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j - 1).getPlayer() == player && this.getOccupied(i - 2, j - 2).getPlayer() == player && this.getOccupied(i - 3, j - 3).getPlayer() == player) {
+					connectFourColumn1 = i;
+					connectFourColumn2 = i - 3;
+					connectFourRow1 = j;
+					connectFourRow2 = j - 3;
 					return true;
 				}
 			}
+		}*/
+
+		// Checks all descending diagonals, top down
+		int x = column - row;
+		int y = 0;
+
+		if (x < 0) {
+			x = 0;
+			y = row - column;
+		};
+
+		for (; x < COLUMNS && y < ROWS; x++) {
+			if (x >= 0 && y >= 0 && this.getOccupied(x, y).getPlayer() == player) {
+				fourInARow++;
+			} else {
+				fourInARow = 0;
+			}
+
+			if (fourInARow == 4) {
+				connectFourColumn1 = x - 3;
+				connectFourColumn2 = x;
+				connectFourRow1 = y - 3;
+				connectFourRow2 = y;
+				return true;
+			}
+			y++;
+		}
+
+		// Checks all ascending diagonals, top down
+		x = column + row;
+		y = 0;
+
+		if (x > COLUMNS - 1) {
+			x = COLUMNS - 1;
+			y = row + column - (COLUMNS - 1);
+		};
+
+		for (fourInARow = 0; x >= 0 && y < ROWS; x--) {
+			if (x >= 0 && y >= 0 && this.getOccupied(x, y).getPlayer() == player) {
+				fourInARow++;
+			} else {
+				fourInARow = 0;
+			}
+
+			if (fourInARow == 4) {
+				connectFourColumn1 = x + 3;
+				connectFourColumn2 = x;
+				connectFourRow1 = y - 3;
+				connectFourRow2 = y;
+				return true;
+			}
+			y++;
 		}
 
 		return false;
 	}
 
+	/**
+	 *
+	 * @return boolean - if wanted to play again
+	 *
+	 * Asks the player in the console whether they want to play again or not.
+	 */
 	public boolean playAgain() {
-		System.out.println("Do you want to play again?\nTo replay, type 'y' or 'Y'");
+		System.out.println("Do you want to play again?\nTo replay, press Enter.\nTo stop, press Escape.\n");
 
-		char in = Input.readChar();
+		allowInputRestart = true;
 
-		if (in == 'y' || in == 'Y') {
+		while (waitingForInput) {
+			this.refreshRate();
+		};
+
+		waitingForInput = true;
+		allowInputRestart = false;
+
+		if (playAgain) {
 			display.clear();
 
 			for (int i = 0; i < COLUMNS; i++) {
 				for (int j = 0; j < ROWS; j++) {
-					contents[i][j] = 0;
+					this.getOccupied(i, j).setPlayer(0);
+					this.getOccupied(i, j).setDrawn(false);
 				}
 			}
 
-			turnPlayer = 1;
 			turnCount = 0;
-			rowCurrentlySelected = 3;
+			columnCurrentlySelected = 3;
+
+			// Refreshes background and arrow
 			this.drawBackground();
 			this.drawArrowSelected();
 			return true;
