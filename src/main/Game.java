@@ -8,32 +8,47 @@ public class Game {
 		int oldSelected = -1;
 
 		while (true) {
+			// Sets the refresh rate
 			game.refreshRate();
 
-			while (!game.rowIsSelected()) {
-				if (game.rowSelected() != oldSelected) {
+			// Unlocks keyboard input
+			game.allowInput = true;
+
+			// Looks for a row to be selected
+			while (!game.columnIsSelected()) {
+				game.refreshRate();
+
+				// Prevents unnecessary updating of graphics; only responds to change
+				if (game.isColumnSelected() != oldSelected) {
 					game.drawArrowSelected();
-					oldSelected = game.rowSelected();
+					oldSelected = game.isColumnSelected();
 				}
-				System.out.print(""); // should be corrected
 			}
-			
-			game.dropPiece(game.rowSelected());
+
+			// If a piece is successfully dropped, it will switch players at the end of the loop
+			boolean success = game.dropPiece(game.isColumnSelected());
+
+			// Draws the taken space in this move
 			game.drawTakenSpaces();
 
-			if (game.checkFour()) {
+			// End game checks
+			if (game.getTurnCount() > 6 && game.checkFour()) {
 				game.displayWinner();
 				if (!game.playAgain()) {
 					break;
 				}
-			}
-
-			if (game.checkFull()) {
-				System.out.println("Nobody wins.");
+			} else if (game.checkFull()) {
+				game.displayNobody();
 				if (!game.playAgain()) {
 					break;
 				}
 			}
+
+			if (success) {
+				game.switchPlayer();
+			}
 		}
+
+		System.exit(1);
 	}
 }
