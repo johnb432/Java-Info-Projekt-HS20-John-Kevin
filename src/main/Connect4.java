@@ -6,8 +6,12 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import javax.swing.*;
 
-public class Connect4 {
+public class Connect4 extends JPanel implements MouseMotionListener, MouseListener {
 	private static final int COLUMNS = 7;
 	private static final int ROWS = 6;
 	private static final int OFFSET_X = 0;
@@ -49,7 +53,37 @@ public class Connect4 {
 	private int connectFourColumn2 = -1;
 	private int connectFourRow1 = -1;
 	private int connectFourRow2 = -1;
-
+	
+	
+	private static final long serialVersionUID = 1L;
+	private static final int SAFETY_MARGIN = 20;
+	
+	/*
+	public Connect4() {
+		display.addMouseListener(this);
+		display.addMouseMotionListener(this);
+	}*/
+		 
+	public void mouseMoved(MouseEvent e) {
+		for (int i = 0; i < COLUMNS; i++) {
+			if (e.getX() <= i * DISTANCE_HOLES_X + BORDER_X + RADIUS + ARROW_WIDTH - SAFETY_MARGIN && e.getX() >= i * DISTANCE_HOLES_X + BORDER_X + ARROW_WIDTH - RADIUS + SAFETY_MARGIN) {
+				columnCurrentlySelected = i;
+				this.drawArrowSelected();
+			}
+		}
+	}
+	
+	public void mouseReleased(MouseEvent e) {
+		isColumnSelected = true;
+	}
+	
+	public void mouseDragged(MouseEvent e) {}
+	public void mousePressed(MouseEvent e) {}   
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
+	public void mouseClicked(MouseEvent e) {}
+	
+ 
 	/**
 	 * Sets up content of arrays, window background and keyboard input
 	 */
@@ -409,38 +443,6 @@ public class Connect4 {
 				return true;
 			}
 		}
-
-		// Checks all diagonals for 4 in a row (which is wasteful, but quite a bit easier to code)
-		/*
-		for (int i = 0; i < COLUMNS; i++) {
-			for (int j = 0; j < ROWS; j++) {
-				if (i < COLUMNS - 3 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j - 1).getPlayer() == player && this.getOccupied(i + 2, j - 2).getPlayer() == player && this.getOccupied(i + 3, j - 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i + 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j - 3;
-					return true;
-				} else if (i < COLUMNS - 3 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i + 1, j + 1).getPlayer() == player && this.getOccupied(i + 2, j + 2).getPlayer() == player && this.getOccupied(i + 3, j + 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i + 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j + 3;
-					return true;
-				} else if (i > 2 && j < ROWS - 3 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j + 1).getPlayer() == player && this.getOccupied(i - 2, j + 2).getPlayer() == player && this.getOccupied(i - 3, j + 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i - 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j + 3;
-					return true;
-				} else if (i > 2 && j > 2 && this.getOccupied(i, j).getPlayer() == player && this.getOccupied(i - 1, j - 1).getPlayer() == player && this.getOccupied(i - 2, j - 2).getPlayer() == player && this.getOccupied(i - 3, j - 3).getPlayer() == player) {
-					connectFourColumn1 = i;
-					connectFourColumn2 = i - 3;
-					connectFourRow1 = j;
-					connectFourRow2 = j - 3;
-					return true;
-				}
-			}
-		}*/
 
 		// Checks all descending diagonals, top down
 		int x = column - row;
