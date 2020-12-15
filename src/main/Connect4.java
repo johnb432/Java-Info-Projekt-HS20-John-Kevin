@@ -478,7 +478,7 @@ public class Connect4 {
 
 		while (waitingForInput) {
 			this.refreshRate();
-		};
+		}
 
 		waitingForInput = true;
 		allowInputRestart = false;
