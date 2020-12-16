@@ -10,9 +10,10 @@ import java.awt.event.KeyEvent;
 public class Connect4 {
 	private static final int COLUMNS = 7;
 	private static final int ROWS = 6;
+	private static final int CONNECTX = 4;
 	private static final int OFFSET_X = 0;
 	private static final int OFFSET_Y = 0;
-	private static final int TURN_COUNT_MAX = 42;
+	private static final int TURN_COUNT_MAX = ROWS * COLUMNS;
 	private static final int FPS = 144;
 
 	private static GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
@@ -41,7 +42,7 @@ public class Connect4 {
 	private boolean allowInputRestart = false;
 	public boolean allowInput = false;
 
-	private int columnCurrentlySelected = 3;
+	private int columnCurrentlySelected = COLUMNS / 2;
 	private int rowCurrentlySelected = 0;
 	private boolean isColumnSelected = false;
 
@@ -394,10 +395,10 @@ public class Connect4 {
 				fourInARow = 0;
 			}
 
-			if (fourInARow == 4) {
+			if (fourInARow == CONNECTX) {
 				connectFourColumn1 = column;
 				connectFourColumn2 = column;
-				connectFourRow1 = i - 3;
+				connectFourRow1 = i - (CONNECTX - 1);
 				connectFourRow2 = i;
 				return true;
 			}
@@ -413,8 +414,8 @@ public class Connect4 {
 				fourInARow = 0;
 			}
 
-			if (fourInARow == 4) {
-				connectFourColumn1 = i - 3;
+			if (fourInARow == CONNECTX) {
+				connectFourColumn1 = i - (CONNECTX - 1);
 				connectFourColumn2 = i;
 				connectFourRow1 = row;
 				connectFourRow2 = row;
@@ -439,10 +440,10 @@ public class Connect4 {
 				fourInARow = 0;
 			}
 
-			if (fourInARow == 4) {
-				connectFourColumn1 = x - 3;
+			if (fourInARow == CONNECTX) {
+				connectFourColumn1 = x - (CONNECTX - 1);
 				connectFourColumn2 = x;
-				connectFourRow1 = y - 3;
+				connectFourRow1 = y - (CONNECTX - 1);
 				connectFourRow2 = y;
 				return true;
 			}
@@ -466,10 +467,10 @@ public class Connect4 {
 				fourInARow = 0;
 			}
 
-			if (fourInARow == 4) {
-				connectFourColumn1 = x + 3;
+			if (fourInARow == CONNECTX) {
+				connectFourColumn1 = x + CONNECTX - 1;
 				connectFourColumn2 = x;
-				connectFourRow1 = y - 3;
+				connectFourRow1 = y - (CONNECTX - 1);
 				connectFourRow2 = y;
 				return true;
 			}
@@ -506,7 +507,7 @@ public class Connect4 {
 			}
 
 			turnCount = 0;
-			columnCurrentlySelected = 3;
+			columnCurrentlySelected = COLUMNS / 2;
 
 			// Refreshes background and arrow
 			this.drawBackground();
