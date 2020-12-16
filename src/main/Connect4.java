@@ -413,6 +413,7 @@ public class Connect4 {
 		// Checks all descending diagonals, top down
 		int x = column - row;
 		int y = 0;
+		fourInARow = 0;
 
 		if (x < 0) {
 			x = 0;
@@ -439,6 +440,7 @@ public class Connect4 {
 		// Checks all ascending diagonals, top down
 		x = column + row;
 		y = 0;
+		fourInARow = 0;
 
 		if (x > COLUMNS - 1) {
 			x = COLUMNS - 1;
