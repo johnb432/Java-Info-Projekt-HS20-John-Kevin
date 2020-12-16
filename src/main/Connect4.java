@@ -238,6 +238,8 @@ public class Connect4 {
 		display.setPenWidth(4.0f);
 		display.drawLine(connectFourColumn1 * DISTANCE_HOLES_X + calcX, connectFourRow1 * DISTANCE_HOLES_Y + calcY, connectFourColumn2 * DISTANCE_HOLES_X + calcX, connectFourRow2 * DISTANCE_HOLES_Y + calcY);
 		display.setPenWidth(1.0f);
+		
+		this.displayPlayAgain();
 	}
 
 	/**
@@ -249,6 +251,16 @@ public class Connect4 {
 		display.drawFancyString(BORDER_X / 2, BACKGROUND_START / 3 * 2, "Nobody wins.", Color.white, BACKGROUND_START / 2);
 
 		this.displayScore(Color.green);
+		
+		this.displayPlayAgain();
+	}
+	
+	/**
+	 * Display text for instructions
+	 */
+	public void displayPlayAgain() {
+		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 5 * 3, "Press Enter to play again", Color.white, BACKGROUND_START / 8);
+		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 5 * 4, "Press Escape to quit", Color.white, BACKGROUND_START / 8);
 	}
 
 	/**
@@ -258,7 +270,7 @@ public class Connect4 {
 	 * Displays the current score in given color
 	 */
 	public void displayScore(Color c) {
-		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 2, "Player 1 " + player1Wins + " : " + player2Wins + " Player 2", c, BACKGROUND_START / 8);
+		display.drawString(WIDTH / 4 * 3, BACKGROUND_START / 5 * 2, "Player 1 " + player1Wins + " : " + player2Wins + " Player 2", c, BACKGROUND_START / 8);
 	}
 
 	public boolean columnIsSelected() {
@@ -474,8 +486,6 @@ public class Connect4 {
 	 * Asks the player in the console whether they want to play again or not.
 	 */
 	public boolean playAgain() {
-		System.out.println("Do you want to play again?\nTo replay, press Enter.\nTo stop, press Escape.\n");
-
 		allowInputRestart = true;
 
 		while (waitingForInput) {
